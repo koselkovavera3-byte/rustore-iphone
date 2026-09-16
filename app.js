@@ -5,8 +5,7 @@ const demo = [
     dev: "RuStore",
     rating: 4.7,
     desc: "Каталог приложений для российских пользователей.",
-    icon: "icon.svg",
-    shots: []
+    icon: "icon.svg"
   },
   {
     id: 2,
@@ -14,8 +13,7 @@ const demo = [
     dev: "VK",
     rating: 4.6,
     desc: "Общение, музыка, видео и сообщества.",
-    icon: "icon.svg",
-    shots: []
+    icon: "icon.svg"
   },
   {
     id: 3,
@@ -23,8 +21,7 @@ const demo = [
     dev: "Минцифры России",
     rating: 4.8,
     desc: "Государственные услуги в одном приложении.",
-    icon: "icon.svg",
-    shots: []
+    icon: "icon.svg"
   },
   {
     id: 4,
@@ -32,8 +29,7 @@ const demo = [
     dev: "Сбер",
     rating: 4.9,
     desc: "Банковские сервисы и платежи.",
-    icon: "icon.svg",
-    shots: []
+    icon: "icon.svg"
   }
 ];
 
@@ -45,21 +41,12 @@ let history = JSON.parse(
   localStorage.getItem("history") || "[]"
 );
 
-const $ = id => document.getElementById(id);
-
-const app = $("app");
-const search = $("search");
+const app = document.getElementById("app");
+const search = document.getElementById("search");
 
 function save() {
-  localStorage.setItem(
-    "favorites",
-    JSON.stringify(favorites)
-  );
-
-  localStorage.setItem(
-    "history",
-    JSON.stringify(history)
-  );
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+  localStorage.setItem("history", JSON.stringify(history));
 }
 
 function isFav(id) {
@@ -87,7 +74,6 @@ function pushHistory(id) {
 function row(x) {
   return `
     <div class="card">
-
       <div class="row">
 
         <img
@@ -97,25 +83,14 @@ function row(x) {
         >
 
         <div style="flex:1">
-
-          <div class="name">
-            ${x.name}
-          </div>
-
-          <div class="muted">
-            ${x.dev}
-          </div>
-
-          <div class="rating">
-            ★ ${x.rating}
-          </div>
-
+          <div class="name">${x.name}</div>
+          <div class="muted">${x.dev}</div>
+          <div class="rating">★ ${x.rating}</div>
         </div>
 
         <button
           class="heart"
           onclick="toggleFav(${x.id})"
-          aria-label="Избранное"
         >
           ${isFav(x.id) ? "♥" : "♡"}
         </button>
@@ -133,50 +108,33 @@ function row(x) {
       >
         Открыть
       </button>
-
     </div>
   `;
 }
 
 function renderHome() {
-
-  const q = search.value
-    .trim()
-    .toLowerCase();
+  const q = search.value.trim().toLowerCase();
 
   const list = demo.filter(x =>
-    (
-      x.name +
-      x.dev +
-      x.desc
-    )
+    `${x.name} ${x.dev} ${x.desc}`
       .toLowerCase()
       .includes(q)
   );
 
   app.innerHTML = list.length
     ? list.map(row).join("")
-    : `<div class="empty">
-        Ничего не найдено
-      </div>`;
+    : `<div class="empty">Ничего не найдено</div>`;
 }
 
 function openApp(id) {
-
-  const x = demo.find(
-    a => a.id === id
-  );
+  const x = demo.find(a => a.id === id);
 
   if (!x) return;
 
   pushHistory(id);
 
   app.innerHTML = `
-
-    <button
-      class="back"
-      onclick="renderHome()"
-    >
+    <button class="back" onclick="renderHome()">
       ‹ Назад
     </button>
 
@@ -191,19 +149,9 @@ function openApp(id) {
         >
 
         <div>
-
-          <div class="name">
-            ${x.name}
-          </div>
-
-          <div class="muted">
-            ${x.dev}
-          </div>
-
-          <div class="rating">
-            ★ ${x.rating}
-          </div>
-
+          <div class="name">${x.name}</div>
+          <div class="muted">${x.dev}</div>
+          <div class="rating">★ ${x.rating}</div>
         </div>
 
       </div>
@@ -214,25 +162,24 @@ function openApp(id) {
 
       <button
         style="margin-top:14px"
-        onclick="alert('Открытие приложения будет подключено на следующем этапе.')"
+        onclick="installDemo('${x.name}')"
       >
         Открыть
       </button>
 
     </div>
 
-    <h2>
-      О приложении
-    </h2>
+    <h2>О приложении</h2>
 
     <div class="card">
-      Описание и информация
-      о приложении.
+      <div class="desc">
+        ${x.desc}
+      </div>
+      <br>
+      Приложение доступно в каталоге RuStore.
     </div>
 
-    <h2>
-      Отзывы
-    </h2>
+    <h2>Отзывы</h2>
 
     <div class="card">
       <b>Пользователь</b>
@@ -252,11 +199,17 @@ function openApp(id) {
   `;
 }
 
-function renderFav() {
-
-  const list = demo.filter(
-    x => isFav(x.id)
+function installDemo(name) {
+  alert(
+    "Страница приложения «" +
+    name +
+    "» открыта. " +
+    "Подключение установки добавим следующим этапом."
   );
+}
+
+function renderFav() {
+  const list = demo.filter(x => isFav(x.id));
 
   app.innerHTML = list.length
     ? list.map(row).join("")
@@ -270,33 +223,20 @@ function renderFav() {
 }
 
 function renderProfile() {
-
   const hist = history
-    .map(id =>
-      demo.find(x => x.id === id)
-    )
+    .map(id => demo.find(x => x.id === id))
     .filter(Boolean);
 
   app.innerHTML = `
-
     <div class="card">
 
       <div class="row">
 
-        <div style="font-size:48px">
-          ◯
-        </div>
+        <div style="font-size:48px">◯</div>
 
         <div>
-
-          <div class="name">
-            Пользователь
-          </div>
-
-          <div class="muted">
-            Локальный профиль
-          </div>
-
+          <div class="name">Пользователь</div>
+          <div class="muted">Локальный профиль</div>
         </div>
 
       </div>
@@ -304,21 +244,14 @@ function renderProfile() {
     </div>
 
     <div class="card">
-
-      <b>Избранное:</b>
-      ${favorites.length}
-
+      <b>Избранное:</b> ${favorites.length}
       <br>
-
-      <b>История:</b>
-      ${history.length}
-
+      <b>История:</b> ${history.length}
     </div>
 
     ${
       hist.length
-        ? `<h2>История</h2>
-           ${hist.map(row).join("")}`
+        ? `<h2>История</h2>${hist.map(row).join("")}`
         : ""
     }
 
@@ -336,55 +269,32 @@ function renderProfile() {
 }
 
 function setTab(tab) {
-
-  document
-    .querySelectorAll(".tab")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.tab === tab
-      );
-
-    });
+  document.querySelectorAll(".tab").forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.tab === tab
+    );
+  });
 
   search.classList.toggle(
     "hidden",
     tab !== "home"
   );
 
-  if (tab === "home") {
-    renderHome();
-  }
-
-  if (tab === "favorites") {
-    renderFav();
-  }
-
-  if (tab === "profile") {
-    renderProfile();
-  }
+  if (tab === "home") renderHome();
+  if (tab === "favorites") renderFav();
+  if (tab === "profile") renderProfile();
 }
 
 function render() {
-
-  const active =
-    document.querySelector(".tab.active");
-
-  const tab =
-    active?.dataset.tab || "home";
-
+  const active = document.querySelector(".tab.active");
+  const tab = active?.dataset.tab || "home";
   setTab(tab);
 }
 
-document
-  .querySelectorAll(".tab")
-  .forEach(button => {
-
-    button.onclick = () =>
-      setTab(button.dataset.tab);
-
-  });
+document.querySelectorAll(".tab").forEach(button => {
+  button.onclick = () => setTab(button.dataset.tab);
+});
 
 search.oninput = renderHome;
 
