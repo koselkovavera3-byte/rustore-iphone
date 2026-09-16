@@ -167,9 +167,65 @@ function renderHome() {
         `
     }
   `;
+function openDemo(name) {
+
+  app.innerHTML = `
+    <div style="
+      min-height:70vh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:30px;
+    ">
+
+      <div style="
+        width:90px;
+        height:90px;
+        border-radius:22px;
+        overflow:hidden;
+        margin-bottom:20px;
+        background:#111;
+      ">
+        <img
+          src="icon.svg"
+          alt="${name}"
+          style="
+            width:100%;
+            height:100%;
+            object-fit:cover;
+          "
+        >
+      </div>
+
+      <h1 style="margin-bottom:8px">
+        ${name}
+      </h1>
+
+      <div class="muted" style="margin-bottom:25px">
+        Приложение запускается
+      </div>
+
+      <div style="
+        font-size:42px;
+        margin-bottom:25px;
+      ">
+        ✓
+      </div>
+
+      <button
+        class="secondary"
+        onclick="renderHome()"
+      >
+        Вернуться в каталог
+      </button>
+
+    </div>
+  `;
 }
 
-function openApp(id) {
+
 
   const x = demo.find(
     item => item.id === id
