@@ -76,6 +76,7 @@
 
     button {
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
 
     #app {
@@ -83,70 +84,188 @@
       max-width: 760px;
       margin: 0 auto;
       padding:
-        calc(20px + env(safe-area-inset-top))
+        calc(18px + env(safe-area-inset-top))
         16px
-        calc(90px + env(safe-area-inset-bottom));
+        calc(92px + env(safe-area-inset-bottom));
     }
 
-    h1 {
-      margin: 18px 0;
-      font-size: 32px;
-      line-height: 1.1;
-      letter-spacing: -0.8px;
+    /* HEADER */
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
     }
 
-    h2 {
-      margin: 24px 0 12px;
-      font-size: 22px;
+    .brand img {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
     }
 
-    h3 {
-      margin: 0 0 8px;
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .brand-name {
       font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
     }
+
+    .brand-subtitle {
+      color: #777;
+      font-size: 12px;
+    }
+
+    /* HERO */
+
+    .hero {
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      margin: 0;
+      max-width: 600px;
+      font-size: 34px;
+      line-height: 1.08;
+      letter-spacing: -1.1px;
+    }
+
+    .hero p {
+      margin: 10px 0 0;
+      color: #666;
+      font-size: 16px;
+      line-height: 1.4;
+    }
+
+    /* SEARCH */
 
     .search {
       width: 100%;
-      height: 48px;
-      border: 1px solid #d2d2d7;
-      border-radius: 14px;
-      padding: 0 16px;
+      height: 52px;
+      margin-bottom: 16px;
+      padding: 0 17px;
+      border: 1px solid #d7d7dc;
+      border-radius: 16px;
       background: #fff;
+      color: #111;
       outline: none;
       font-size: 17px;
+      box-shadow:
+        0 2px 8px rgba(0,0,0,.03);
+    }
+
+    .search::placeholder {
+      color: #999;
     }
 
     .search:focus {
-      border-color: #888;
+      border-color: #999;
     }
 
+    /* CATEGORIES */
+
+    .categories {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 0 0 5px;
+      margin-bottom: 22px;
+      scrollbar-width: none;
+    }
+
+    .categories::-webkit-scrollbar {
+      display: none;
+    }
+
+    .category {
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: 0 15px;
+      border: 1px solid #d7d7dc;
+      border-radius: 20px;
+      background: #fff;
+      color: #555;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .category.active {
+      border-color: #111;
+      background: #111;
+      color: #fff;
+    }
+
+    /* SECTION */
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 2px 12px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: -0.3px;
+    }
+
+    .section-count {
+      color: #888;
+      font-size: 13px;
+    }
+
+    /* CARD */
+
     .card {
-      margin-bottom: 14px;
+      margin-bottom: 12px;
       padding: 16px;
       background: #fff;
       border: 1px solid #e5e5e7;
-      border-radius: 18px;
+      border-radius: 19px;
       box-shadow:
-        0 2px 8px rgba(0,0,0,.04);
+        0 2px 10px rgba(0,0,0,.035);
+    }
+
+    .app-card {
+      transition:
+        transform .12s ease,
+        box-shadow .12s ease;
+    }
+
+    .app-card:active {
+      transform: scale(.985);
     }
 
     .row {
       display: flex;
-      align-items: center;
-      gap: 14px;
+      align-items: flex-start;
+      gap: 13px;
     }
 
     .icon {
-      width: 58px;
-      height: 58px;
-      flex: 0 0 58px;
-      border-radius: 15px;
+      width: 62px;
+      height: 62px;
+      flex: 0 0 62px;
+      border-radius: 16px;
       object-fit: cover;
+      background: #111;
+    }
+
+    .app-info {
+      min-width: 0;
+      flex: 1;
     }
 
     .name {
       font-size: 18px;
-      font-weight: 700;
+      font-weight: 750;
+      line-height: 1.2;
     }
 
     .muted {
@@ -154,31 +273,80 @@
       font-size: 14px;
     }
 
-    .rating {
-      margin-top: 4px;
-      font-size: 14px;
+    .developer {
+      margin-top: 3px;
     }
 
-    .desc {
-      margin-top: 10px;
-      line-height: 1.45;
-      color: #333;
+    .rating {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: 600;
     }
 
     .heart {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 36px;
       border: 0;
-      background: transparent;
+      border-radius: 18px;
+      background: #f5f5f7;
       color: #111;
-      font-size: 28px;
+      font-size: 22px;
       line-height: 1;
-      padding: 4px;
     }
+
+    .desc {
+      margin-top: 12px;
+      color: #444;
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .app-meta {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 10px;
+      color: #777;
+      font-size: 13px;
+    }
+
+    /* STATUS */
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+      margin-top: 8px;
+      padding: 5px 9px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-available {
+      background: #e9f7ed;
+      color: #18763a;
+    }
+
+    .status-recovery {
+      background: #fff4dc;
+      color: #8a5a00;
+    }
+
+    .status-web {
+      background: #eeeeef;
+      color: #666;
+    }
+
+    /* BUTTONS */
 
     .primary,
     .secondary {
+      min-height: 46px;
       border-radius: 13px;
       padding: 0 16px;
-      min-height: 44px;
+      font-weight: 650;
     }
 
     .primary {
@@ -188,62 +356,68 @@
     }
 
     .secondary {
-      border: 1px solid #d2d2d7;
+      border: 1px solid #d5d5da;
       background: #fff;
       color: #111;
     }
 
+    .card .primary {
+      width: 100%;
+      margin-top: 14px;
+    }
+
+    /* DETAIL */
+
     .back {
       border: 0;
       background: transparent;
-      padding: 4px 0;
-      margin-bottom: 12px;
       color: #111;
+      padding: 3px 0;
+      margin-bottom: 14px;
       font-size: 17px;
     }
 
-    .empty {
-      padding: 40px 20px;
-      text-align: center;
-      color: #777;
-    }
+    /* INSTALL */
 
     .install-box {
-      margin-top: 20px;
+      margin-top: 18px;
       padding: 16px;
       border-radius: 16px;
       background: #f5f5f7;
     }
 
+    .install-box .primary,
+    .install-box .secondary {
+      width: 100%;
+      margin-top: 10px;
+    }
+
     .install-step {
       margin: 12px 0;
       padding: 18px;
+      border: 1px solid #e5e5e7;
       border-radius: 16px;
       background: #fff;
-      border: 1px solid #e5e5e7;
     }
 
     .big-icon {
       padding: 12px 0;
-      font-size: 42px;
       text-align: center;
+      font-size: 42px;
     }
 
-    .status {
-      display: inline-block;
+    /* EMPTY */
+
+    .empty {
+      padding: 42px 20px;
+      border-radius: 18px;
+      background: #fff;
+      color: #777;
+      text-align: center;
+      line-height: 1.5;
     }
 
-    .status-available {
-      color: #16803c;
-    }
-
-    .status-recovery {
-      color: #8a5a00;
-    }
-
-    .status-web {
-      color: #666;
-    }
+    /* NAV */
 
     .bottom-nav {
       position: fixed;
@@ -251,20 +425,20 @@
       left: 0;
       right: 0;
       bottom: 0;
-      display: flex;
-      justify-content: center;
       padding:
         8px
         12px
         calc(8px + env(safe-area-inset-bottom));
-      background: rgba(255,255,255,.94);
       border-top: 1px solid #ddd;
-      backdrop-filter: blur(16px);
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
     }
 
     .bottom-nav-inner {
       width: 100%;
       max-width: 760px;
+      margin: 0 auto;
       display: flex;
       gap: 8px;
     }
@@ -273,10 +447,11 @@
       flex: 1;
       min-height: 48px;
       border: 0;
-      border-radius: 12px;
+      border-radius: 13px;
       background: transparent;
       color: #777;
-      font-weight: 600;
+      font-size: 14px;
+      font-weight: 650;
     }
 
     .tab.active {
@@ -284,19 +459,16 @@
       color: #fff;
     }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 4px;
-      font-size: 18px;
-      font-weight: 800;
-    }
+    @media (min-width: 700px) {
 
-    .brand img {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
+      #app {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
     }
   </style>
 </head>
@@ -304,12 +476,110 @@
 <body>
 
   <main id="app">
-    <div class="card">
-      Загрузка iOS App Hub…
+
+    <div class="brand">
+      <img
+        src="./icon.svg?v=20260916-4"
+        alt="iOS App Hub"
+      >
+
+      <div class="brand-text">
+        <div class="brand-name">
+          iOS App Hub
+        </div>
+
+        <div class="brand-subtitle">
+          Приложения для iPhone
+        </div>
+      </div>
     </div>
+
+    <section class="hero">
+
+      <h1>
+        Российские приложения
+        для iPhone
+      </h1>
+
+      <p>
+        Найди приложение, проверь доступность
+        и выбери официальный способ использования.
+      </p>
+
+    </section>
+
+    <input
+      id="search"
+      class="search"
+      type="search"
+      placeholder="Поиск приложений"
+      autocomplete="off"
+      aria-label="Поиск приложений"
+    >
+
+    <div class="categories">
+
+      <button
+        class="category active"
+        type="button"
+        data-category="Все"
+      >
+        Все
+      </button>
+
+      <button
+        class="category"
+        type="button"
+        data-category="Социальные"
+      >
+        Социальные
+      </button>
+
+      <button
+        class="category"
+        type="button"
+        data-category="Государство"
+      >
+        Государство
+      </button>
+
+      <button
+        class="category"
+        type="button"
+        data-category="Финансы"
+      >
+        Финансы
+      </button>
+
+      <button
+        class="category"
+        type="button"
+        data-category="Магазины"
+      >
+        Магазины
+      </button>
+
+    </div>
+
+    <div class="section-header">
+
+      <h2 class="section-title">
+        Каталог
+      </h2>
+
+      <span
+        id="appCount"
+        class="section-count"
+      ></span>
+
+    </div>
+
+    <div id="appList"></div>
+
   </main>
 
   <nav class="bottom-nav">
+
     <div class="bottom-nav-inner">
 
       <button
@@ -337,30 +607,13 @@
       </button>
 
     </div>
+
   </nav>
 
   <script
     src="./app.js?v=20260916-4"
     defer
   ></script>
-
-  <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register(
-          "./sW.js?v=20260916-4",
-          {
-            updateViaCache: "none"
-          }
-        ).catch(error => {
-          console.error(
-            "Service Worker:",
-            error
-          );
-        });
-      });
-    }
-  </script>
 
 </body>
 </html>
