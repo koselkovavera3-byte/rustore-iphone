@@ -48,19 +48,20 @@ const app = document.getElementById("app");
 
 function load(key, fallback) {
   try {
-    const value = JSON.parse(
-      localStorage.getItem(key)
-    );
+    const value = localStorage.getItem(key);
 
-    return value ?? fallback;
+    if (!value) {
+      return fallback;
+    }
 
-  } catch {
+    return JSON.parse(value);
+  } catch (error) {
+    console.error("Load error:", error);
     return fallback;
   }
 }
 
 function save() {
-
   localStorage.setItem(
     "favorites",
     JSON.stringify(favorites)
@@ -73,38 +74,27 @@ function save() {
 }
 
 function getApp(id) {
-
-  return apps.find(
-    item => item.id === id
-  );
+  return apps.find(item => item.id === id);
 }
 
 function isFavorite(id) {
-
   return favorites.includes(id);
 }
 
 function toggleFavorite(id) {
-
   if (isFavorite(id)) {
-
-    favorites =
-      favorites.filter(
-        item => item !== id
-      );
-
+    favorites = favorites.filter(
+      item => item !== id
+    );
   } else {
-
     favorites.push(id);
   }
 
   save();
-
   renderCurrent();
 }
 
 function addHistory(id) {
-
   history = [
     id,
     ...history.filter(
@@ -116,9 +106,7 @@ function addHistory(id) {
 }
 
 function renderCard(item) {
-
   return `
-
     <div class="card">
 
       <div class="row">
@@ -147,15 +135,10 @@ function renderCard(item) {
 
         <button
           class="heart"
-          onclick="
-            toggleFavorite(${item.id})
-          "
+          type="button"
+          onclick="toggleFavorite(${item.id})"
         >
-          ${
-            isFavorite(item.id)
-              ? "♥"
-              : "♡"
-          }
+          ${isFavorite(item.id) ? "♥" : "♡"}
         </button>
 
       </div>
@@ -173,13 +156,12 @@ function renderCard(item) {
 
       <button
         class="secondary"
+        type="button"
         style="
           width:100%;
           margin-top:14px;
         "
-        onclick="
-          openApp(${item.id})
-        "
+        onclick="openApp(${item.id})"
       >
         Открыть
       </button>
@@ -189,9 +171,7 @@ function renderCard(item) {
 }
 
 function renderHome() {
-
   app.innerHTML = `
-
     <input
       id="search"
       class="search"
@@ -203,21 +183,23 @@ function renderHome() {
       Приложения
     </h1>
 
+    <div
+      class="muted"
+      style="margin-bottom:15px"
+    >
+      Каталог приложений
+    </div>
+
     <div id="appList"></div>
   `;
 
   const search =
-    document.getElementById(
-      "search"
-    );
+    document.getElementById("search");
 
   const list =
-    document.getElementById(
-      "appList"
-    );
+    document.getElementById("appList");
 
   function update() {
-
     const query =
       search.value
         .trim()
@@ -227,8 +209,11 @@ function renderHome() {
       apps.filter(item =>
         (
           item.name +
+          " " +
           item.dev +
+          " " +
           item.desc +
+          " " +
           item.category
         )
           .toLowerCase()
@@ -237,9 +222,9 @@ function renderHome() {
 
     list.innerHTML =
       filtered.length
-        ? filtered.map(
-            renderCard
-          ).join("")
+        ? filtered
+            .map(renderCard)
+            .join("")
         : `
           <div class="empty">
             Ничего не найдено
@@ -256,17 +241,18 @@ function renderHome() {
 }
 
 function openApp(id) {
-
   const item = getApp(id);
 
-  if (!item) return;
+  if (!item) {
+    return;
+  }
 
   addHistory(id);
 
   app.innerHTML = `
-
     <button
       class="back"
+      type="button"
       onclick="renderHome()"
     >
       ‹ Назад
@@ -300,21 +286,21 @@ function openApp(id) {
 
         <button
           class="heart"
+          type="button"
           onclick="
             toggleFavorite(${item.id});
             openApp(${item.id});
           "
         >
-          ${
-            isFavorite(item.id)
-              ? "♥"
-              : "♡"
-          }
+          ${isFavorite(item.id) ? "♥" : "♡"}
         </button>
 
       </div>
 
-      <div class="desc">
+      <div
+        class="desc"
+        style="margin-top:15px"
+      >
         ${item.desc}
       </div>
 
@@ -322,22 +308,20 @@ function openApp(id) {
         class="muted"
         style="margin-top:12px"
       >
-        Категория:
-        ${item.category}
+        Категория: ${item.category}
       </div>
 
       <button
         class="primary"
+        type="button"
         style="
           width:100%;
           margin-top:20px;
           height:48px;
         "
-        onclick="
-          openExternal('${item.url}')
-        "
+        onclick="openExternal('${item.url}')"
       >
-        Открыть приложение
+        Перейти на сайт
       </button>
 
     </div>
@@ -391,32 +375,51 @@ function openApp(id) {
 
     </div>
 
+    <div class="card">
+
+      <b>
+        Пользователь
+      </b>
+
+      <div style="margin-top:5px">
+        ★★★★☆
+      </div>
+
+      <div
+        class="muted"
+        style="margin-top:5px"
+      >
+        Работает хорошо.
+      </div>
+
+    </div>
   `;
 }
 
 function openExternal(url) {
-
-  window.location.href = url;
+  window.open(
+    url,
+    "_blank",
+    "noopener,noreferrer"
+  );
 }
 
 function renderFavorites() {
-
   const list =
     apps.filter(
       item => isFavorite(item.id)
     );
 
   app.innerHTML = `
-
     <h1>
       Избранное
     </h1>
 
     ${
       list.length
-        ? list.map(
-            renderCard
-          ).join("")
+        ? list
+            .map(renderCard)
+            .join("")
         : `
           <div class="empty">
             Нет избранных приложений.
@@ -430,14 +433,12 @@ function renderFavorites() {
 }
 
 function renderProfile() {
-
   const historyApps =
     history
       .map(id => getApp(id))
       .filter(Boolean);
 
   app.innerHTML = `
-
     <h1>
       Профиль
     </h1>
@@ -503,29 +504,32 @@ function renderProfile() {
             .map(renderCard)
             .join("")}
         `
-        : ""
+        : `
+          <div class="empty">
+            История пока пуста.
+          </div>
+        `
     }
 
     <button
       class="secondary"
+      type="button"
       style="
         width:100%;
         margin-top:10px;
       "
       onclick="
-        history=[];
+        history = [];
         save();
         renderProfile();
       "
     >
       Очистить историю
     </button>
-
   `;
 }
 
 function renderCurrent() {
-
   const active =
     document.querySelector(
       ".tab.active"
@@ -538,32 +542,36 @@ function renderCurrent() {
 
   if (tab === "home") {
     renderHome();
+    return;
   }
 
   if (tab === "favorites") {
     renderFavorites();
+    return;
   }
 
   if (tab === "profile") {
     renderProfile();
+    return;
   }
+
+  renderHome();
 }
 
 document
   .querySelectorAll(".tab")
   .forEach(button => {
-
     button.addEventListener(
       "click",
       () => {
 
         document
           .querySelectorAll(".tab")
-          .forEach(item =>
+          .forEach(item => {
             item.classList.remove(
               "active"
-            )
-          );
+            );
+          });
 
         button.classList.add(
           "active"
@@ -572,17 +580,14 @@ document
         renderCurrent();
       }
     );
-
   });
 
 if (
   "serviceWorker" in navigator
 ) {
-
   window.addEventListener(
     "load",
     () => {
-
       navigator.serviceWorker
         .register("sW.js")
         .catch(error => {
@@ -591,7 +596,6 @@ if (
             error
           );
         });
-
     }
   );
 }
