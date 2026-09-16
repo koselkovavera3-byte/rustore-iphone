@@ -45,6 +45,10 @@ let history = JSON.parse(
   localStorage.getItem("history") || "[]"
 );
 
+let installed = JSON.parse(
+  localStorage.getItem("installed") || "[]"
+);
+
 const app = document.getElementById("app");
 const search = document.getElementById("search");
 
@@ -58,21 +62,44 @@ function save() {
     "history",
     JSON.stringify(history)
   );
+
+  localStorage.setItem(
+    "installed",
+    JSON.stringify(installed)
+  );
 }
 
 function isFav(id) {
   return favorites.includes(id);
 }
 
+function isInstalled(id) {
+  return installed.includes(id);
+}
+
 function toggleFav(id) {
   if (isFav(id)) {
-    favorites = favorites.filter(x => x !== id);
+    favorites = favorites.filter(
+      x => x !== id
+    );
   } else {
     favorites.push(id);
   }
 
   save();
-  renderHome();
+
+  const currentTab = document.querySelector(
+    ".tab.active"
+  );
+
+  if (
+    currentTab &&
+    currentTab.dataset.tab === "favorites"
+  ) {
+    renderFav();
+  } else {
+    renderHome();
+  }
 }
 
 function pushHistory(id) {
@@ -125,16 +152,24 @@ function row(x) {
         ${x.desc}
       </div>
 
-      <div class="muted" style="margin-top:8px">
+      <div
+        class="muted"
+        style="margin-top:8px"
+      >
         ${x.category}
       </div>
 
       <button
         class="secondary"
-        style="margin-top:12px;width:100%;"
+        style="
+          margin-top:12px;
+          width:100%;
+        "
         onclick="openApp(${x.id})"
       >
-        Открыть
+        ${isInstalled(x.id)
+          ? "Открыть"
+          : "Подробнее"}
       </button>
 
     </div>
@@ -143,9 +178,9 @@ function row(x) {
 
 function renderHome() {
 
-  const q = search.value
-    .trim()
-    .toLowerCase();
+  const q = search
+    ? search.value.trim().toLowerCase()
+    : "";
 
   const list = demo.filter(x =>
     (
@@ -159,9 +194,14 @@ function renderHome() {
   );
 
   app.innerHTML = `
-    <h2>Приложения</h2>
+    <h2>
+      Приложения
+    </h2>
 
-    <div class="muted" style="margin-bottom:12px">
+    <div
+      class="muted"
+      style="margin-bottom:12px"
+    >
       ${list.length} приложения
     </div>
 
@@ -234,28 +274,64 @@ function openApp(id) {
 
       </div>
 
-      <div class="desc" style="margin-top:15px">
+      <div
+        class="desc"
+        style="margin-top:15px"
+      >
         ${x.desc}
       </div>
 
-      <div class="muted" style="margin-top:12px">
+      <div
+        class="muted"
+        style="margin-top:12px"
+      >
         Категория: ${x.category}
       </div>
 
-      <button
-        style="
-          width:100%;
-          margin-top:20px;
-          height:48px;
-        "
-        onclick="openDemo('${x.name}')"
-      >
-        Открыть
-      </button>
+      ${
+        isInstalled(x.id)
+          ? `
+            <button
+              style="
+                width:100%;
+                margin-top:20px;
+                height:48px;
+              "
+              onclick="openDemo('${x.name}')"
+            >
+              Открыть
+            </button>
+
+            <div
+              style="
+                text-align:center;
+                margin-top:10px;
+                color:#32cd32;
+                font-size:13px;
+              "
+            >
+              ✓ Установлено
+            </div>
+          `
+          : `
+            <button
+              style="
+                width:100%;
+                margin-top:20px;
+                height:48px;
+              "
+              onclick="installApp(${x.id})"
+            >
+              Установить
+            </button>
+          `
+      }
 
     </div>
 
-    <h2>О приложении</h2>
+    <h2>
+      О приложении
+    </h2>
 
     <div class="card">
 
@@ -263,7 +339,10 @@ function openApp(id) {
         ${x.desc}
       </div>
 
-      <div class="desc" style="margin-top:10px">
+      <div
+        class="desc"
+        style="margin-top:10px"
+      >
         Версия 1.0.0
       </div>
 
@@ -273,11 +352,15 @@ function openApp(id) {
 
     </div>
 
-    <h2>Отзывы</h2>
+    <h2>
+      Отзывы
+    </h2>
 
     <div class="card">
 
-      <b>Пользователь</b>
+      <b>
+        Пользователь
+      </b>
 
       <div style="margin-top:5px">
         ★★★★★
@@ -291,7 +374,9 @@ function openApp(id) {
 
     <div class="card">
 
-      <b>Пользователь</b>
+      <b>
+        Пользователь
+      </b>
 
       <div style="margin-top:5px">
         ★★★★☆
@@ -303,6 +388,130 @@ function openApp(id) {
 
     </div>
   `;
+}
+
+function installApp(id) {
+
+  const x = demo.find(
+    item => item.id === id
+  );
+
+  if (!x) return;
+
+  app.innerHTML = `
+
+    <div
+      class="card"
+      style="
+        text-align:center;
+        margin-top:40px;
+      "
+    >
+
+      <img
+        src="${x.icon}"
+        alt="${x.name}"
+        style="
+          width:90px;
+          height:90px;
+          border-radius:22px;
+          object-fit:cover;
+        "
+      >
+
+      <h2 style="margin-top:20px">
+        ${x.name}
+      </h2>
+
+      <div
+        id="installText"
+        class="muted"
+        style="margin:15px 0"
+      >
+        Подготовка установки…
+      </div>
+
+      <div
+        style="
+          height:8px;
+          background:rgba(255,255,255,.1);
+          border-radius:10px;
+          overflow:hidden;
+        "
+      >
+        <div
+          id="installProgress"
+          style="
+            width:0%;
+            height:100%;
+            background:#d4af37;
+            transition:width .2s;
+          "
+        ></div>
+      </div>
+
+      <div
+        id="installPercent"
+        style="margin-top:12px"
+      >
+        0%
+      </div>
+
+    </div>
+  `;
+
+  let progress = 0;
+
+  const timer = setInterval(() => {
+
+    progress += 10;
+
+    const bar =
+      document.getElementById(
+        "installProgress"
+      );
+
+    const percent =
+      document.getElementById(
+        "installPercent"
+      );
+
+    const text =
+      document.getElementById(
+        "installText"
+      );
+
+    if (bar) {
+      bar.style.width =
+        progress + "%";
+    }
+
+    if (percent) {
+      percent.textContent =
+        progress + "%";
+    }
+
+    if (progress >= 100) {
+
+      clearInterval(timer);
+
+      if (text) {
+        text.textContent =
+          "Установка завершена ✓";
+      }
+
+      if (!installed.includes(id)) {
+        installed.push(id);
+      }
+
+      save();
+
+      setTimeout(() => {
+        openApp(id);
+      }, 800);
+    }
+
+  }, 180);
 }
 
 function openDemo(name) {
@@ -439,12 +648,26 @@ function renderProfile() {
 
     <div class="card">
 
-      <b>Избранное:</b>
+      <b>
+        Избранное:
+      </b>
+
       ${favorites.length}
 
       <br>
 
-      <b>История:</b>
+      <b>
+        Установлено:
+      </b>
+
+      ${installed.length}
+
+      <br>
+
+      <b>
+        История:
+      </b>
+
       ${history.length}
 
     </div>
@@ -487,10 +710,12 @@ function setTab(tab) {
 
     });
 
-  search.classList.toggle(
-    "hidden",
-    tab !== "home"
-  );
+  if (search) {
+    search.classList.toggle(
+      "hidden",
+      tab !== "home"
+    );
+  }
 
   if (tab === "home") {
     renderHome();
@@ -514,6 +739,8 @@ document
 
   });
 
-search.oninput = renderHome;
+if (search) {
+  search.oninput = renderHome;
+}
 
 renderHome();
