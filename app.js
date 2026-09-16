@@ -1,21 +1,21 @@
 /*
  * iOS App Hub
- * Frontend V3
+ * Frontend V3.1
  *
  * Discovery → Availability → Recovery
  *
  * ВАЖНО:
- * Этот frontend НЕ скачивает IPA напрямую.
- * НЕ запрашивает Apple ID или пароль.
- * Native installation остаётся отдельным будущим
- * backend / approved distribution integration.
+ * - frontend не скачивает IPA напрямую;
+ * - Apple ID и пароль не запрашиваются;
+ * - native installation остаётся отдельным будущим backend-flow;
+ * - recovery сейчас является информационным экраном.
  */
 
 const CONFIG = {
   apiBase: "",
   catalogEndpoint: "/api/apps",
   marketplaceName: "iOS App Hub",
-  version: "3.0.0"
+  version: "3.1.0"
 };
 
 /* --------------------------------------------------
@@ -29,7 +29,8 @@ const apps = [
     developer: "VK",
     rating: 4.6,
     category: "Социальные",
-    description: "Общение, музыка, видео и сообщества.",
+    description:
+      "Общение, музыка, видео и сообщества.",
     icon: "icon.svg",
     nativeIOSAvailable: false,
     appStoreStatus: "unavailable",
@@ -44,7 +45,8 @@ const apps = [
     developer: "Минцифры России",
     rating: 4.8,
     category: "Государство",
-    description: "Государственные услуги в одном приложении.",
+    description:
+      "Государственные услуги в одном приложении.",
     icon: "icon.svg",
     nativeIOSAvailable: false,
     appStoreStatus: "unavailable",
@@ -59,7 +61,8 @@ const apps = [
     developer: "Сбер",
     rating: 4.9,
     category: "Финансы",
-    description: "Банковские сервисы и платежи.",
+    description:
+      "Банковские сервисы и платежи.",
     icon: "icon.svg",
     nativeIOSAvailable: false,
     appStoreStatus: "unavailable",
@@ -74,7 +77,8 @@ const apps = [
     developer: "RuStore",
     rating: 4.7,
     category: "Магазины",
-    description: "Каталог приложений для российских пользователей.",
+    description:
+      "Каталог приложений для российских пользователей.",
     icon: "icon.svg",
     nativeIOSAvailable: false,
     appStoreStatus: "unavailable",
@@ -85,7 +89,7 @@ const apps = [
 ];
 
 /* --------------------------------------------------
-   СОСТОЯНИЕ
+   STATE
 -------------------------------------------------- */
 
 let favorites = load("favorites", []);
@@ -94,25 +98,44 @@ let history = load("history", []);
 let currentView = "home";
 let currentCategory = "Все";
 
-const appRoot = document.getElementById("app");
+/* --------------------------------------------------
+   ROOT
+-------------------------------------------------- */
+
+const appRoot =
+  document.getElementById("app");
+
+if (!appRoot) {
+  throw new Error(
+    "Element #app not found"
+  );
+}
 
 /* --------------------------------------------------
    STORAGE
 -------------------------------------------------- */
 
 function load(key, fallback) {
-  try {
-    const value = JSON.parse(
-      localStorage.getItem(key)
-    );
 
-    return value ?? fallback;
+  try {
+
+    const value =
+      JSON.parse(
+        localStorage.getItem(key)
+      );
+
+    return Array.isArray(value)
+      ? value
+      : fallback;
+
   } catch {
+
     return fallback;
   }
 }
 
 function save() {
+
   localStorage.setItem(
     "favorites",
     JSON.stringify(favorites)
@@ -129,20 +152,25 @@ function save() {
 -------------------------------------------------- */
 
 function isIOS() {
+
   return /iPhone|iPad|iPod/i.test(
     navigator.userAgent
   );
 }
 
 function isAndroid() {
+
   return /Android/i.test(
     navigator.userAgent
   );
 }
 
 function isSafari() {
+
   return (
-    /Safari/i.test(navigator.userAgent) &&
+    /Safari/i.test(
+      navigator.userAgent
+    ) &&
     !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(
       navigator.userAgent
     )
@@ -150,6 +178,7 @@ function isSafari() {
 }
 
 function isStandalone() {
+
   return (
     window.navigator.standalone === true ||
     (
@@ -166,20 +195,25 @@ function isStandalone() {
 -------------------------------------------------- */
 
 function getApp(id) {
+
   return apps.find(
     item => item.id === id
   );
 }
 
 function isFavorite(id) {
+
   return favorites.includes(id);
 }
 
 function getCategories() {
+
   return [
     "Все",
     ...new Set(
-      apps.map(item => item.category)
+      apps.map(
+        item => item.category
+      )
     )
   ];
 }
@@ -199,6 +233,7 @@ function toggleFavorite(id) {
   }
 
   save();
+
   renderCurrent();
 }
 
@@ -221,6 +256,7 @@ function addHistory(id) {
 function getStatus(item) {
 
   if (item.nativeIOSAvailable) {
+
     return {
       text: "Доступно для установки",
       className: "status-available"
@@ -228,6 +264,7 @@ function getStatus(item) {
   }
 
   if (item.recoverySupported) {
+
     return {
       text: "Проверить восстановление",
       className: "status-recovery"
@@ -242,16 +279,12 @@ function getStatus(item) {
 
 function renderStatus(item) {
 
-  const status = getStatus(item);
+  const status =
+    getStatus(item);
 
   return `
     <div
       class="status ${status.className}"
-      style="
-        margin-top:8px;
-        font-size:13px;
-        font-weight:600;
-      "
     >
       ${escapeHTML(status.text)}
     </div>
@@ -265,28 +298,30 @@ function renderStatus(item) {
 function renderCard(item) {
 
   return `
-    <div class="card">
+    <article
+      class="card app-card"
+    >
 
       <div class="row">
 
         <img
           class="icon"
-          src="${item.icon}"
-          alt="${escapeHTML(item.name)}"
+          src="${escapeAttribute(item.icon)}"
+          alt="${escapeAttribute(item.name)}"
         >
 
-        <div style="flex:1">
+        <div class="app-info">
 
           <div class="name">
             ${escapeHTML(item.name)}
           </div>
 
-          <div class="muted">
+          <div class="muted developer">
             ${escapeHTML(item.developer)}
           </div>
 
           <div class="rating">
-            ★ ${item.rating}
+            ★ ${Number(item.rating).toFixed(1)}
           </div>
 
           ${renderStatus(item)}
@@ -296,8 +331,14 @@ function renderCard(item) {
         <button
           class="heart"
           type="button"
-          aria-label="Избранное"
-          onclick="toggleFavorite('${item.id}')"
+          aria-label="${
+            isFavorite(item.id)
+              ? "Убрать из избранного"
+              : "Добавить в избранное"
+          }"
+          onclick="
+            toggleFavorite('${escapeAttribute(item.id)}')
+          "
         >
           ${
             isFavorite(item.id)
@@ -312,72 +353,25 @@ function renderCard(item) {
         ${escapeHTML(item.description)}
       </div>
 
-      <div
-        class="muted"
-        style="margin-top:8px"
-      >
-        ${escapeHTML(item.category)}
+      <div class="app-meta">
+
+        <span>
+          ${escapeHTML(item.category)}
+        </span>
+
       </div>
 
       <button
         class="primary"
-        style="
-          width:100%;
-          margin-top:14px;
-        "
         type="button"
-        onclick="openApp('${item.id}')"
+        onclick="
+          openApp('${escapeAttribute(item.id)}')
+        "
       >
         Открыть
       </button>
 
-    </div>
-  `;
-}
-
-/* --------------------------------------------------
-   CATEGORY FILTER
--------------------------------------------------- */
-
-function renderCategories() {
-
-  return `
-    <div
-      style="
-        display:flex;
-        gap:8px;
-        overflow-x:auto;
-        padding:4px 0 14px;
-        scrollbar-width:none;
-      "
-    >
-
-      ${getCategories()
-        .map(category => `
-          <button
-            type="button"
-            class="${
-              currentCategory === category
-                ? "primary"
-                : "secondary"
-            }"
-            style="
-              white-space:nowrap;
-              padding:9px 14px;
-              border-radius:18px;
-            "
-            onclick="
-              currentCategory =
-                '${escapeHTML(category)}';
-              renderHome();
-            "
-          >
-            ${escapeHTML(category)}
-          </button>
-        `)
-        .join("")}
-
-    </div>
+    </article>
   `;
 }
 
@@ -391,30 +385,117 @@ function renderHome() {
 
   appRoot.innerHTML = `
 
+    <div class="brand">
+
+      <img
+        src="./icon.svg?v=20260916-4"
+        alt="iOS App Hub"
+      >
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          iOS App Hub
+        </div>
+
+        <div class="brand-subtitle">
+          Приложения для iPhone
+        </div>
+
+      </div>
+
+    </div>
+
+    <section class="hero">
+
+      <h1>
+        Российские приложения
+        для iPhone
+      </h1>
+
+      <p>
+        Найди приложение, проверь доступность
+        и выбери официальный способ использования.
+      </p>
+
+    </section>
+
     <input
       id="search"
       class="search"
+      type="search"
       placeholder="Поиск приложений"
       autocomplete="off"
       aria-label="Поиск приложений"
     >
 
-    <h1>
-      Приложения
-    </h1>
+    <div class="categories">
 
-    ${renderCategories()}
+      ${getCategories()
+        .map(category => `
+          <button
+            class="category ${
+              currentCategory === category
+                ? "active"
+                : ""
+            }"
+            type="button"
+            data-category="${escapeAttribute(category)}"
+          >
+            ${escapeHTML(category)}
+          </button>
+        `)
+        .join("")}
 
-    <div
-      id="appList"
-    ></div>
+    </div>
+
+    <div class="section-header">
+
+      <h2 class="section-title">
+        Каталог
+      </h2>
+
+      <span
+        id="appCount"
+        class="section-count"
+      ></span>
+
+    </div>
+
+    <div id="appList"></div>
   `;
 
   const search =
-    document.getElementById("search");
+    document.getElementById(
+      "search"
+    );
 
   const list =
-    document.getElementById("appList");
+    document.getElementById(
+      "appList"
+    );
+
+  const count =
+    document.getElementById(
+      "appCount"
+    );
+
+  document
+    .querySelectorAll(".category")
+    .forEach(button => {
+
+      button.addEventListener(
+        "click",
+        () => {
+
+          currentCategory =
+            button.dataset.category;
+
+          renderHome();
+        }
+      );
+
+    });
 
   function update() {
 
@@ -445,6 +526,11 @@ function renderHome() {
         );
       });
 
+    count.textContent =
+      formatAppCount(
+        filtered.length
+      );
+
     list.innerHTML =
       filtered.length
         ? filtered
@@ -452,7 +538,8 @@ function renderHome() {
             .join("")
         : `
           <div class="empty">
-            Ничего не найдено
+            По вашему запросу
+            ничего не найдено.
           </div>
         `;
   }
@@ -466,16 +553,18 @@ function renderHome() {
 }
 
 /* --------------------------------------------------
-   APP PAGE
+   APP DETAIL
 -------------------------------------------------- */
 
 function openApp(id) {
 
-  const item = getApp(id);
+  const item =
+    getApp(id);
 
   if (!item) return;
 
   currentView = "app";
+
   addHistory(id);
 
   appRoot.innerHTML = `
@@ -488,28 +577,49 @@ function openApp(id) {
       ‹ Назад
     </button>
 
+    <div class="brand">
+
+      <img
+        src="./icon.svg?v=20260916-4"
+        alt="iOS App Hub"
+      >
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          iOS App Hub
+        </div>
+
+        <div class="brand-subtitle">
+          Карточка приложения
+        </div>
+
+      </div>
+
+    </div>
+
     <div class="card">
 
       <div class="row">
 
         <img
           class="icon"
-          src="${item.icon}"
-          alt="${escapeHTML(item.name)}"
+          src="${escapeAttribute(item.icon)}"
+          alt="${escapeAttribute(item.name)}"
         >
 
-        <div style="flex:1">
+        <div class="app-info">
 
           <div class="name">
             ${escapeHTML(item.name)}
           </div>
 
-          <div class="muted">
+          <div class="muted developer">
             ${escapeHTML(item.developer)}
           </div>
 
           <div class="rating">
-            ★ ${item.rating}
+            ★ ${Number(item.rating).toFixed(1)}
           </div>
 
           ${renderStatus(item)}
@@ -520,8 +630,7 @@ function openApp(id) {
           class="heart"
           type="button"
           onclick="
-            toggleFavorite('${item.id}');
-            openApp('${item.id}');
+            toggleFavorite('${escapeAttribute(item.id)}')
           "
         >
           ${
@@ -533,18 +642,11 @@ function openApp(id) {
 
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:15px"
-      >
+      <div class="desc">
         ${escapeHTML(item.description)}
       </div>
 
-      <div
-        class="muted"
-        style="margin-top:12px"
-      >
-        Категория:
+      <div class="app-meta">
         ${escapeHTML(item.category)}
       </div>
 
@@ -562,18 +664,14 @@ function openApp(id) {
         ${escapeHTML(item.description)}
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:10px"
-      >
-        Версия: ожидается из каталога
+      <div class="desc">
+        Версия:
+        ожидается из каталога
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:5px"
-      >
-        Бесплатно
+      <div class="desc">
+        Распространение:
+        официальный канал
       </div>
 
     </div>
@@ -582,7 +680,7 @@ function openApp(id) {
 }
 
 /* --------------------------------------------------
-   INSTALL / AVAILABILITY
+   INSTALL AREA
 -------------------------------------------------- */
 
 function renderInstallArea(item) {
@@ -592,29 +690,23 @@ function renderInstallArea(item) {
     if (item.nativeIOSAvailable) {
 
       return `
-        <div
-          class="install-box"
-          style="margin-top:20px"
-        >
+        <div class="install-box">
 
           <h3>
             Установка
           </h3>
 
           <p class="desc">
-            Доступна официальная версия
-            для поддерживаемого канала
-            распространения.
+            Доступен поддерживаемый
+            официальный способ установки.
           </p>
 
           <button
             class="primary"
-            style="
-              width:100%;
-              height:52px;
-            "
             type="button"
-            onclick="installNative('${item.id}')"
+            onclick="
+              installNative('${escapeAttribute(item.id)}')
+            "
           >
             Установить приложение
           </button>
@@ -624,10 +716,7 @@ function renderInstallArea(item) {
     }
 
     return `
-      <div
-        class="install-box"
-        style="margin-top:20px"
-      >
+      <div class="install-box">
 
         <h3>
           Доступность на iPhone
@@ -644,13 +733,10 @@ function renderInstallArea(item) {
             ? `
               <button
                 class="primary"
-                style="
-                  width:100%;
-                  height:50px;
-                  margin-top:10px;
-                "
                 type="button"
-                onclick="openRecovery('${item.id}')"
+                onclick="
+                  openRecovery('${escapeAttribute(item.id)}')
+                "
               >
                 Проверить восстановление
               </button>
@@ -660,13 +746,10 @@ function renderInstallArea(item) {
 
         <button
           class="secondary"
-          style="
-            width:100%;
-            height:48px;
-            margin-top:10px;
-          "
           type="button"
-          onclick="openWebVersion('${item.id}')"
+          onclick="
+            openWebVersion('${escapeAttribute(item.id)}')
+          "
         >
           Открыть официальный сервис
         </button>
@@ -676,13 +759,10 @@ function renderInstallArea(item) {
             ? `
               <button
                 class="secondary"
-                style="
-                  width:100%;
-                  height:48px;
-                  margin-top:10px;
-                "
                 type="button"
-                onclick="showIOSInstructions('${item.id}')"
+                onclick="
+                  showIOSInstructions('${escapeAttribute(item.id)}')
+                "
               >
                 Добавить веб-версию на экран Домой
               </button>
@@ -697,28 +777,23 @@ function renderInstallArea(item) {
   if (isAndroid()) {
 
     return `
-      <div
-        class="install-box"
-        style="margin-top:20px"
-      >
+      <div class="install-box">
 
         <h3>
           Android
         </h3>
 
         <p class="desc">
-          Открой официальный источник
+          Используй официальный источник
           приложения.
         </p>
 
         <button
           class="primary"
-          style="
-            width:100%;
-            height:50px;
-          "
           type="button"
-          onclick="openWebVersion('${item.id}')"
+          onclick="
+            openWebVersion('${escapeAttribute(item.id)}')
+          "
         >
           Открыть официальный источник
         </button>
@@ -728,10 +803,7 @@ function renderInstallArea(item) {
   }
 
   return `
-    <div
-      class="install-box"
-      style="margin-top:20px"
-    >
+    <div class="install-box">
 
       <h3>
         Официальный источник
@@ -739,12 +811,10 @@ function renderInstallArea(item) {
 
       <button
         class="primary"
-        style="
-          width:100%;
-          height:50px;
-        "
         type="button"
-        onclick="openWebVersion('${item.id}')"
+        onclick="
+          openWebVersion('${escapeAttribute(item.id)}')
+        "
       >
         Открыть
       </button>
@@ -759,11 +829,13 @@ function renderInstallArea(item) {
 
 function openRecovery(id) {
 
-  const item = getApp(id);
+  const item =
+    getApp(id);
 
   if (!item) return;
 
   currentView = "recovery";
+
   addHistory(id);
 
   appRoot.innerHTML = `
@@ -771,10 +843,33 @@ function openRecovery(id) {
     <button
       class="back"
       type="button"
-      onclick="openApp('${item.id}')"
+      onclick="
+        openApp('${escapeAttribute(item.id)}')
+      "
     >
       ‹ Назад
     </button>
+
+    <div class="brand">
+
+      <img
+        src="./icon.svg?v=20260916-4"
+        alt="iOS App Hub"
+      >
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          iOS App Hub
+        </div>
+
+        <div class="brand-subtitle">
+          Восстановление приложения
+        </div>
+
+      </div>
+
+    </div>
 
     <h1>
       Восстановление
@@ -786,11 +881,11 @@ function openRecovery(id) {
 
         <img
           class="icon"
-          src="${item.icon}"
-          alt="${escapeHTML(item.name)}"
+          src="${escapeAttribute(item.icon)}"
+          alt="${escapeAttribute(item.name)}"
         >
 
-        <div>
+        <div class="app-info">
 
           <div class="name">
             ${escapeHTML(item.name)}
@@ -804,22 +899,21 @@ function openRecovery(id) {
 
       </div>
 
-      <h2 style="margin-top:20px">
+      <h2>
         Проверка доступности
       </h2>
 
       <p class="desc">
-        Если приложение ранее было связано
-        с твоей учётной записью Apple,
-        доступный официальный способ
-        восстановления можно проверить
-        отдельно.
+        Если приложение ранее было
+        связано с твоей учётной записью
+        Apple, возможность официального
+        восстановления может зависеть
+        от текущего статуса приложения.
       </p>
 
       <p class="muted">
-        iOS App Hub не запрашивает Apple ID
-        или пароль и не принимает их
-        на этом сайте.
+        iOS App Hub не запрашивает
+        Apple ID или пароль на этом сайте.
       </p>
 
     </div>
@@ -827,30 +921,28 @@ function openRecovery(id) {
     <div class="card">
 
       <h3>
-        Следующий шаг
+        Текущий статус
       </h3>
 
       <p class="desc">
-        Сервис восстановления будет
-        подключаться отдельным клиентом
-        или официальным каналом.
+        Интеграция с реальным механизмом
+        восстановления пока не подключена.
       </p>
 
       <p class="muted">
-        Сейчас эта функция находится
-        в режиме подготовки.
+        Этот экран является частью
+        продуктового интерфейса P0.
       </p>
 
     </div>
 
     <button
       class="secondary"
-      style="
-        width:100%;
-        height:50px;
-      "
+      style="width:100%"
       type="button"
-      onclick="openWebVersion('${item.id}')"
+      onclick="
+        openWebVersion('${escapeAttribute(item.id)}')
+      "
     >
       Открыть официальный источник
     </button>
@@ -864,20 +956,10 @@ function openRecovery(id) {
 
 async function installNative(id) {
 
-  const item = getApp(id);
+  const item =
+    getApp(id);
 
   if (!item) return;
-
-  /*
-   * В production здесь должен находиться
-   * только подтверждённый backend flow.
-   *
-   * Никаких:
-   * - .ipa download
-   * - Apple ID
-   * - Apple password
-   * - обхода App Store
-   */
 
   try {
 
@@ -893,6 +975,7 @@ async function installNative(id) {
       );
 
     if (!response.ok) {
+
       throw new Error(
         `Install API ${response.status}`
       );
@@ -905,6 +988,7 @@ async function installNative(id) {
       !data ||
       !data.installUrl
     ) {
+
       throw new Error(
         "Install URL отсутствует"
       );
@@ -927,26 +1011,30 @@ async function installNative(id) {
 }
 
 /* --------------------------------------------------
-   WEB VERSION
+   WEB
 -------------------------------------------------- */
 
 function openWebVersion(id) {
 
-  const item = getApp(id);
+  const item =
+    getApp(id);
 
-  if (!item || !item.webUrl) return;
+  if (!item || !item.webUrl) {
+    return;
+  }
 
   window.location.href =
     item.webUrl;
 }
 
 /* --------------------------------------------------
-   iOS INSTRUCTIONS
+   iOS WEB INSTRUCTIONS
 -------------------------------------------------- */
 
 function showIOSInstructions(id) {
 
-  const item = getApp(id);
+  const item =
+    getApp(id);
 
   if (!item) return;
 
@@ -957,7 +1045,9 @@ function showIOSInstructions(id) {
     <button
       class="back"
       type="button"
-      onclick="openApp('${item.id}')"
+      onclick="
+        openApp('${escapeAttribute(item.id)}')
+      "
     >
       ‹ Назад
     </button>
@@ -978,8 +1068,8 @@ function showIOSInstructions(id) {
 
       <p class="desc">
         Это веб-версия, а не IPA.
-        Мы не выдаём веб-приложение
-        за нативное приложение iOS.
+        iOS App Hub не выдаёт веб-сервис
+        за нативное приложение.
       </p>
 
     </div>
@@ -997,12 +1087,10 @@ function showIOSInstructions(id) {
 
       <button
         class="primary"
-        style="
-          width:100%;
-          height:50px;
-        "
         type="button"
-        onclick="openWebVersion('${item.id}')"
+        onclick="
+          openWebVersion('${escapeAttribute(item.id)}')
+        "
       >
         Открыть ${escapeHTML(item.name)}
       </button>
@@ -1070,6 +1158,27 @@ function renderFavorites() {
 
   appRoot.innerHTML = `
 
+    <div class="brand">
+
+      <img
+        src="./icon.svg?v=20260916-4"
+        alt="iOS App Hub"
+      >
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          iOS App Hub
+        </div>
+
+        <div class="brand-subtitle">
+          Избранные приложения
+        </div>
+
+      </div>
+
+    </div>
+
     <h1>
       Избранное
     </h1>
@@ -1109,6 +1218,27 @@ function renderProfile() {
       .filter(Boolean);
 
   appRoot.innerHTML = `
+
+    <div class="brand">
+
+      <img
+        src="./icon.svg?v=20260916-4"
+        alt="iOS App Hub"
+      >
+
+      <div class="brand-text">
+
+        <div class="brand-name">
+          iOS App Hub
+        </div>
+
+        <div class="brand-subtitle">
+          Локальный профиль
+        </div>
+
+      </div>
+
+    </div>
 
     <h1>
       Профиль
@@ -1180,10 +1310,7 @@ function renderProfile() {
 
     <button
       class="secondary"
-      style="
-        width:100%;
-        margin-top:10px;
-      "
+      style="width:100%; margin-top:10px"
       type="button"
       onclick="
         history=[];
@@ -1193,6 +1320,7 @@ function renderProfile() {
     >
       Очистить историю
     </button>
+
   `;
 }
 
@@ -1212,8 +1340,11 @@ function renderCurrent() {
     return;
   }
 
-  if (currentView === "app") {
-    renderHome();
+  if (currentView === "recovery") {
+    return;
+  }
+
+  if (currentView === "instructions") {
     return;
   }
 
@@ -1283,13 +1414,10 @@ function showMessage(text) {
 
       <button
         class="secondary"
-        style="
-          width:100%;
-          height:48px;
-        "
+        style="width:100%; height:48px"
         type="button"
         onclick="
-          currentView='${previousView}';
+          currentView='${escapeAttribute(previousView)}';
           renderCurrent();
         "
       >
@@ -1312,6 +1440,31 @@ function escapeHTML(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+function escapeAttribute(value) {
+
+  return escapeHTML(value);
+}
+
+/* --------------------------------------------------
+   COUNT
+-------------------------------------------------- */
+
+function formatAppCount(count) {
+
+  if (count === 1) {
+    return "1 приложение";
+  }
+
+  if (
+    count >= 2 &&
+    count <= 4
+  ) {
+    return `${count} приложения`;
+  }
+
+  return `${count} приложений`;
 }
 
 /* --------------------------------------------------
