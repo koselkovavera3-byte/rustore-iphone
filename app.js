@@ -1341,15 +1341,25 @@ function renderCurrent() {
   }
 
   if (currentView === "recovery") {
+    openRecovery(
+      history[0]
+    );
     return;
   }
 
   if (currentView === "instructions") {
+    showIOSInstructions(
+      history[0]
+    );
     return;
   }
 
   renderHome();
 }
+
+/* --------------------------------------------------
+   BOTTOM NAV
+-------------------------------------------------- */
 
 document
   .querySelectorAll(".tab")
@@ -1481,7 +1491,7 @@ if ("serviceWorker" in navigator) {
 
         const registration =
           await navigator.serviceWorker.register(
-            "./sW.js?v=20260916-4",
+            "./sW.js?v=20260916-5",
             {
               updateViaCache: "none"
             }
