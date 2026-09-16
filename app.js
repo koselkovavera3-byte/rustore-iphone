@@ -37,15 +37,27 @@ const demo = [
   }
 ];
 
-let favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-let history = JSON.parse(localStorage.getItem("history") || "[]");
+let favorites = JSON.parse(
+  localStorage.getItem("favorites") || "[]"
+);
+
+let history = JSON.parse(
+  localStorage.getItem("history") || "[]"
+);
 
 const app = document.getElementById("app");
 const search = document.getElementById("search");
 
 function save() {
-  localStorage.setItem("favorites", JSON.stringify(favorites));
-  localStorage.setItem("history", JSON.stringify(history));
+  localStorage.setItem(
+    "favorites",
+    JSON.stringify(favorites)
+  );
+
+  localStorage.setItem(
+    "history",
+    JSON.stringify(history)
+  );
 }
 
 function isFav(id) {
@@ -53,12 +65,14 @@ function isFav(id) {
 }
 
 function toggleFav(id) {
-  favorites = isFav(id)
-    ? favorites.filter(x => x !== id)
-    : [...favorites, id];
+  if (isFav(id)) {
+    favorites = favorites.filter(x => x !== id);
+  } else {
+    favorites.push(id);
+  }
 
   save();
-  render();
+  renderHome();
 }
 
 function pushHistory(id) {
@@ -111,9 +125,13 @@ function row(x) {
         ${x.desc}
       </div>
 
+      <div class="muted" style="margin-top:8px">
+        ${x.category}
+      </div>
+
       <button
         class="secondary"
-        style="margin-top:10px"
+        style="margin-top:12px;width:100%;"
         onclick="openApp(${x.id})"
       >
         Открыть
@@ -124,7 +142,10 @@ function row(x) {
 }
 
 function renderHome() {
-  const q = search.value.trim().toLowerCase();
+
+  const q = search.value
+    .trim()
+    .toLowerCase();
 
   const list = demo.filter(x =>
     (
@@ -140,6 +161,10 @@ function renderHome() {
   app.innerHTML = `
     <h2>Приложения</h2>
 
+    <div class="muted" style="margin-bottom:12px">
+      ${list.length} приложения
+    </div>
+
     ${
       list.length
         ? list.map(row).join("")
@@ -153,13 +178,17 @@ function renderHome() {
 }
 
 function openApp(id) {
-  const x = demo.find(item => item.id === id);
+
+  const x = demo.find(
+    item => item.id === id
+  );
 
   if (!x) return;
 
   pushHistory(id);
 
   app.innerHTML = `
+
     <button
       class="back"
       onclick="renderHome()"
@@ -195,14 +224,17 @@ function openApp(id) {
 
         <button
           class="heart"
-          onclick="toggleFav(${x.id}); openApp(${x.id})"
+          onclick="
+            toggleFav(${x.id});
+            openApp(${x.id});
+          "
         >
           ${isFav(x.id) ? "♥" : "♡"}
         </button>
 
       </div>
 
-      <div class="desc">
+      <div class="desc" style="margin-top:15px">
         ${x.desc}
       </div>
 
@@ -213,7 +245,7 @@ function openApp(id) {
       <button
         style="
           width:100%;
-          margin-top:18px;
+          margin-top:20px;
           height:48px;
         "
         onclick="openDemo('${x.name}')"
@@ -226,39 +258,64 @@ function openApp(id) {
     <h2>О приложении</h2>
 
     <div class="card">
+
       <div class="desc">
         ${x.desc}
       </div>
 
-      <div class="desc">
-        Это демонстрационная страница
-        приложения в нашем RuStore MVP.
+      <div class="desc" style="margin-top:10px">
+        Версия 1.0.0
       </div>
+
+      <div class="desc">
+        Бесплатно
+      </div>
+
     </div>
 
     <h2>Отзывы</h2>
 
     <div class="card">
+
       <b>Пользователь</b>
-      <div>★★★★★</div>
+
+      <div style="margin-top:5px">
+        ★★★★★
+      </div>
+
       <div class="muted">
         Отличное приложение.
       </div>
+
     </div>
 
     <div class="card">
+
       <b>Пользователь</b>
-      <div>★★★★☆</div>
+
+      <div style="margin-top:5px">
+        ★★★★☆
+      </div>
+
       <div class="muted">
         Работает хорошо.
       </div>
+
     </div>
   `;
 }
 
 function openDemo(name) {
+
   app.innerHTML = `
-    <div class="card" style="text-align:center; margin-top:40px;">
+
+    <div
+      class="card"
+      style="
+        text-align:center;
+        margin-top:40px;
+      "
+    >
 
       <img
         src="icon.svg"
@@ -272,13 +329,23 @@ function openDemo(name) {
         "
       >
 
-      <h2>${name}</h2>
+      <h2>
+        ${name}
+      </h2>
 
-      <p class="muted" style="margin:15px 0;">
+      <p
+        class="muted"
+        style="margin:15px 0;"
+      >
         Приложение запущено
       </p>
 
-      <div style="font-size:42px; margin:20px;">
+      <div
+        style="
+          font-size:42px;
+          margin:20px;
+        "
+      >
         ✓
       </div>
 
@@ -294,10 +361,16 @@ function openDemo(name) {
 }
 
 function renderFav() {
-  const list = demo.filter(x => isFav(x.id));
+
+  const list = demo.filter(
+    x => isFav(x.id)
+  );
 
   app.innerHTML = `
-    <h2>Избранное</h2>
+
+    <h2>
+      Избранное
+    </h2>
 
     ${
       list.length
@@ -306,7 +379,8 @@ function renderFav() {
           <div class="empty">
             Нет избранных приложений
             <br><br>
-            Добавляй приложения кнопкой ♡
+            Добавляй приложения
+            кнопкой ♡
           </div>
         `
     }
@@ -314,28 +388,36 @@ function renderFav() {
 }
 
 function renderProfile() {
+
   const hist = history
-    .map(id => demo.find(x => x.id === id))
+    .map(id =>
+      demo.find(x => x.id === id)
+    )
     .filter(Boolean);
 
   app.innerHTML = `
-    <h2>Профиль</h2>
+
+    <h2>
+      Профиль
+    </h2>
 
     <div class="card">
 
       <div class="row">
 
-        <div style="
-          width:58px;
-          height:58px;
-          border-radius:50%;
-          background:#111;
-          color:#fff;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          font-size:24px;
-        ">
+        <div
+          style="
+            width:58px;
+            height:58px;
+            border-radius:50%;
+            background:#111;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:24px;
+          "
+        >
           V
         </div>
 
@@ -370,7 +452,10 @@ function renderProfile() {
     ${
       hist.length
         ? `
-          <h2>История</h2>
+          <h2>
+            История
+          </h2>
+
           ${hist.map(row).join("")}
         `
         : ""
@@ -390,13 +475,16 @@ function renderProfile() {
 }
 
 function setTab(tab) {
+
   document
     .querySelectorAll(".tab")
     .forEach(button => {
+
       button.classList.toggle(
         "active",
         button.dataset.tab === tab
       );
+
     });
 
   search.classList.toggle(
@@ -404,23 +492,26 @@ function setTab(tab) {
     tab !== "home"
   );
 
-  if (tab === "home") renderHome();
-  if (tab === "favorites") renderFav();
-  if (tab === "profile") renderProfile();
-}
+  if (tab === "home") {
+    renderHome();
+  }
 
-function render() {
-  const active = document.querySelector(".tab.active");
-  const tab = active?.dataset.tab || "home";
+  if (tab === "favorites") {
+    renderFav();
+  }
 
-  setTab(tab);
+  if (tab === "profile") {
+    renderProfile();
+  }
 }
 
 document
   .querySelectorAll(".tab")
   .forEach(button => {
+
     button.onclick = () =>
       setTab(button.dataset.tab);
+
   });
 
 search.oninput = renderHome;
