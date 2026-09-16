@@ -1,4 +1,4 @@
-const demo = [
+const apps = [
   {
     id: 1,
     name: "RuStore",
@@ -37,20 +37,21 @@ const demo = [
   }
 ];
 
-let favorites = JSON.parse(
-  localStorage.getItem("favorites") || "[]"
-);
-
-let history = JSON.parse(
-  localStorage.getItem("history") || "[]"
-);
-
-let installed = JSON.parse(
-  localStorage.getItem("installed") || "[]"
-);
+let favorites = load("favorites", []);
+let history = load("history", []);
+let installed = load("installed", []);
 
 const app = document.getElementById("app");
-const search = document.getElementById("search");
+
+function load(key, fallback) {
+  try {
+    return JSON.parse(
+      localStorage.getItem(key)
+    ) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 function save() {
   localStorage.setItem(
@@ -69,7 +70,13 @@ function save() {
   );
 }
 
-function isFav(id) {
+function getApp(id) {
+  return apps.find(
+    item => item.id === id
+  );
+}
+
+function isFavorite(id) {
   return favorites.includes(id);
 }
 
@@ -77,155 +84,281 @@ function isInstalled(id) {
   return installed.includes(id);
 }
 
-function toggleFav(id) {
-  if (isFav(id)) {
-    favorites = favorites.filter(
-      x => x !== id
-    );
+function toggleFavorite(id) {
+
+  if (isFavorite(id)) {
+    favorites =
+      favorites.filter(
+        item => item !== id
+      );
   } else {
     favorites.push(id);
   }
 
   save();
 
-  const currentTab = document.querySelector(
-    ".tab.active"
-  );
-
-  if (
-    currentTab &&
-    currentTab.dataset.tab === "favorites"
-  ) {
-    renderFav();
-  } else {
-    renderHome();
-  }
+  renderCurrent();
 }
 
-function pushHistory(id) {
+function addHistory(id) {
+
   history = [
     id,
-    ...history.filter(x => x !== id)
+    ...history.filter(
+      item => item !== id
+    )
   ].slice(0, 30);
 
   save();
 }
 
-function row(x) {
+function installApp(id) {
+
+  const item = getApp(id);
+
+  if (!item) return;
+
+  let progress = 0;
+
+  app.innerHTML = `
+
+    <div class="card install-card">
+
+      <img
+        class="large-icon"
+        src="${item.icon}"
+        alt="${item.name}"
+      >
+
+      <h1>
+        ${item.name}
+      </h1>
+
+      <p
+        id="installStatus"
+        class="muted"
+        style="margin-top:10px"
+      >
+        Подготовка установки…
+      </p>
+
+      <div class="progress">
+
+        <div
+          id="progressBar"
+          class="progress-bar"
+        ></div>
+
+      </div>
+
+      <div id="progressValue">
+        0%
+      </div>
+
+    </div>
+  `;
+
+  const timer = setInterval(() => {
+
+    progress += 10;
+
+    const bar =
+      document.getElementById(
+        "progressBar"
+      );
+
+    const value =
+      document.getElementById(
+        "progressValue"
+      );
+
+    const status =
+      document.getElementById(
+        "installStatus"
+      );
+
+    if (bar) {
+      bar.style.width =
+        progress + "%";
+    }
+
+    if (value) {
+      value.textContent =
+        progress + "%";
+    }
+
+    if (progress >= 100) {
+
+      clearInterval(timer);
+
+      if (status) {
+        status.innerHTML =
+          '<span class="success">Установка завершена ✓</span>';
+      }
+
+      if (!installed.includes(id)) {
+        installed.push(id);
+      }
+
+      save();
+
+      setTimeout(() => {
+        renderApp(id);
+      }, 900);
+    }
+
+  }, 180);
+}
+
+function renderHome() {
+
+  app.innerHTML = `
+
+    <input
+      id="search"
+      class="search"
+      placeholder="Поиск приложений"
+      autocomplete="off"
+    >
+
+    <h1>
+      Приложения
+    </h1>
+
+    <div
+      id="appList"
+    ></div>
+  `;
+
+  const search =
+    document.getElementById("search");
+
+  function update() {
+
+    const query =
+      search.value
+        .trim()
+        .toLowerCase();
+
+    const filtered =
+      apps.filter(item =>
+        (
+          item.name +
+          item.dev +
+          item.desc +
+          item.category
+        )
+        .toLowerCase()
+        .includes(query)
+      );
+
+    const list =
+      document.getElementById(
+        "appList"
+      );
+
+    list.innerHTML =
+      filtered.length
+        ? filtered.map(renderCard).join("")
+        : `
+          <div class="empty">
+            Ничего не найдено
+          </div>
+        `;
+  }
+
+  search.addEventListener(
+    "input",
+    update
+  );
+
+  update();
+}
+
+function renderCard(item) {
+
   return `
+
     <div class="card">
 
       <div class="row">
 
         <img
           class="icon"
-          src="${x.icon}"
-          alt="${x.name}"
+          src="${item.icon}"
+          alt="${item.name}"
         >
 
         <div style="flex:1">
 
           <div class="name">
-            ${x.name}
+            ${item.name}
           </div>
 
           <div class="muted">
-            ${x.dev}
+            ${item.dev}
           </div>
 
           <div class="rating">
-            ★ ${x.rating}
+            ★ ${item.rating}
           </div>
 
         </div>
 
         <button
           class="heart"
-          onclick="toggleFav(${x.id})"
+          onclick="
+            toggleFavorite(${item.id})
+          "
         >
-          ${isFav(x.id) ? "♥" : "♡"}
+          ${
+            isFavorite(item.id)
+              ? "♥"
+              : "♡"
+          }
         </button>
 
       </div>
 
       <div class="desc">
-        ${x.desc}
+        ${item.desc}
       </div>
 
       <div
         class="muted"
         style="margin-top:8px"
       >
-        ${x.category}
+        ${item.category}
       </div>
 
       <button
         class="secondary"
         style="
-          margin-top:12px;
           width:100%;
+          margin-top:14px;
         "
-        onclick="openApp(${x.id})"
+        onclick="
+          renderApp(${item.id})
+        "
       >
-        ${isInstalled(x.id)
-          ? "Открыть"
-          : "Подробнее"}
+        ${
+          isInstalled(item.id)
+            ? "Открыть"
+            : "Подробнее"
+        }
       </button>
 
     </div>
   `;
 }
 
-function renderHome() {
+function renderApp(id) {
 
-  const q = search
-    ? search.value.trim().toLowerCase()
-    : "";
+  const item = getApp(id);
 
-  const list = demo.filter(x =>
-    (
-      x.name +
-      x.dev +
-      x.desc +
-      x.category
-    )
-      .toLowerCase()
-      .includes(q)
-  );
+  if (!item) return;
 
-  app.innerHTML = `
-    <h2>
-      Приложения
-    </h2>
-
-    <div
-      class="muted"
-      style="margin-bottom:12px"
-    >
-      ${list.length} приложения
-    </div>
-
-    ${
-      list.length
-        ? list.map(row).join("")
-        : `
-          <div class="empty">
-            Ничего не найдено
-          </div>
-        `
-    }
-  `;
-}
-
-function openApp(id) {
-
-  const x = demo.find(
-    item => item.id === id
-  );
-
-  if (!x) return;
-
-  pushHistory(id);
+  addHistory(id);
 
   app.innerHTML = `
 
@@ -242,22 +375,22 @@ function openApp(id) {
 
         <img
           class="icon"
-          src="${x.icon}"
-          alt="${x.name}"
+          src="${item.icon}"
+          alt="${item.name}"
         >
 
         <div style="flex:1">
 
           <div class="name">
-            ${x.name}
+            ${item.name}
           </div>
 
           <div class="muted">
-            ${x.dev}
+            ${item.dev}
           </div>
 
           <div class="rating">
-            ★ ${x.rating}
+            ★ ${item.rating}
           </div>
 
         </div>
@@ -265,66 +398,86 @@ function openApp(id) {
         <button
           class="heart"
           onclick="
-            toggleFav(${x.id});
-            openApp(${x.id});
+            toggleFavorite(${item.id})
           "
         >
-          ${isFav(x.id) ? "♥" : "♡"}
+          ${
+            isFavorite(item.id)
+              ? "♥"
+              : "♡"
+          }
         </button>
 
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:15px"
-      >
-        ${x.desc}
+      <div class="desc">
+        ${item.desc}
       </div>
 
       <div
         class="muted"
         style="margin-top:12px"
       >
-        Категория: ${x.category}
+        Категория:
+        ${item.category}
+      </div>
+
+      <div
+        style="
+          display:flex;
+          gap:10px;
+          margin-top:20px;
+        "
+      >
+
+        ${
+          isInstalled(item.id)
+            ? `
+              <button
+                class="primary"
+                style="
+                  flex:1;
+                  height:48px;
+                "
+                onclick="
+                  launchApp(${item.id})
+                "
+              >
+                Открыть
+              </button>
+            `
+            : `
+              <button
+                class="primary"
+                style="
+                  flex:1;
+                  height:48px;
+                "
+                onclick="
+                  installApp(${item.id})
+                "
+              >
+                Установить
+              </button>
+            `
+        }
+
       </div>
 
       ${
-        isInstalled(x.id)
+        isInstalled(item.id)
           ? `
-            <button
-              style="
-                width:100%;
-                margin-top:20px;
-                height:48px;
-              "
-              onclick="openDemo('${x.name}')"
-            >
-              Открыть
-            </button>
-
             <div
+              class="success"
               style="
                 text-align:center;
-                margin-top:10px;
-                color:#32cd32;
-                font-size:13px;
+                margin-top:12px;
               "
             >
               ✓ Установлено
             </div>
           `
-          : `
-            <button
-              style="
-                width:100%;
-                margin-top:20px;
-                height:48px;
-              "
-              onclick="installApp(${x.id})"
-            >
-              Установить
-            </button>
-          `
+          : ""
       }
 
     </div>
@@ -336,7 +489,7 @@ function openApp(id) {
     <div class="card">
 
       <div class="desc">
-        ${x.desc}
+        ${item.desc}
       </div>
 
       <div
@@ -346,7 +499,10 @@ function openApp(id) {
         Версия 1.0.0
       </div>
 
-      <div class="desc">
+      <div
+        class="desc"
+        style="margin-top:5px"
+      >
         Бесплатно
       </div>
 
@@ -362,11 +518,19 @@ function openApp(id) {
         Пользователь
       </b>
 
-      <div style="margin-top:5px">
+      <div
+        style="
+          color:#d4af37;
+          margin-top:5px;
+        "
+      >
         ★★★★★
       </div>
 
-      <div class="muted">
+      <div
+        class="muted"
+        style="margin-top:5px"
+      >
         Отличное приложение.
       </div>
 
@@ -378,11 +542,19 @@ function openApp(id) {
         Пользователь
       </b>
 
-      <div style="margin-top:5px">
+      <div
+        style="
+          color:#d4af37;
+          margin-top:5px;
+        "
+      >
         ★★★★☆
       </div>
 
-      <div class="muted">
+      <div
+        class="muted"
+        style="margin-top:5px"
+      >
         Работает хорошо.
       </div>
 
@@ -390,203 +562,74 @@ function openApp(id) {
   `;
 }
 
-function installApp(id) {
+function launchApp(id) {
 
-  const x = demo.find(
-    item => item.id === id
-  );
+  const item = getApp(id);
 
-  if (!x) return;
+  if (!item) return;
 
   app.innerHTML = `
 
     <div
-      class="card"
-      style="
-        text-align:center;
-        margin-top:40px;
-      "
+      class="card install-card"
+      style="margin-top:40px"
     >
 
       <img
-        src="${x.icon}"
-        alt="${x.name}"
-        style="
-          width:90px;
-          height:90px;
-          border-radius:22px;
-          object-fit:cover;
-        "
+        class="large-icon"
+        src="${item.icon}"
+        alt="${item.name}"
       >
 
-      <h2 style="margin-top:20px">
-        ${x.name}
-      </h2>
+      <h1>
+        ${item.name}
+      </h1>
 
       <div
-        id="installText"
-        class="muted"
-        style="margin:15px 0"
-      >
-        Подготовка установки…
-      </div>
-
-      <div
-        style="
-          height:8px;
-          background:rgba(255,255,255,.1);
-          border-radius:10px;
-          overflow:hidden;
-        "
-      >
-        <div
-          id="installProgress"
-          style="
-            width:0%;
-            height:100%;
-            background:#d4af37;
-            transition:width .2s;
-          "
-        ></div>
-      </div>
-
-      <div
-        id="installPercent"
+        class="success"
         style="margin-top:12px"
       >
-        0%
-      </div>
-
-    </div>
-  `;
-
-  let progress = 0;
-
-  const timer = setInterval(() => {
-
-    progress += 10;
-
-    const bar =
-      document.getElementById(
-        "installProgress"
-      );
-
-    const percent =
-      document.getElementById(
-        "installPercent"
-      );
-
-    const text =
-      document.getElementById(
-        "installText"
-      );
-
-    if (bar) {
-      bar.style.width =
-        progress + "%";
-    }
-
-    if (percent) {
-      percent.textContent =
-        progress + "%";
-    }
-
-    if (progress >= 100) {
-
-      clearInterval(timer);
-
-      if (text) {
-        text.textContent =
-          "Установка завершена ✓";
-      }
-
-      if (!installed.includes(id)) {
-        installed.push(id);
-      }
-
-      save();
-
-      setTimeout(() => {
-        openApp(id);
-      }, 800);
-    }
-
-  }, 180);
-}
-
-function openDemo(name) {
-
-  app.innerHTML = `
-
-    <div
-      class="card"
-      style="
-        text-align:center;
-        margin-top:40px;
-      "
-    >
-
-      <img
-        src="icon.svg"
-        alt="${name}"
-        style="
-          width:90px;
-          height:90px;
-          border-radius:22px;
-          object-fit:cover;
-          margin-bottom:20px;
-        "
-      >
-
-      <h2>
-        ${name}
-      </h2>
-
-      <p
-        class="muted"
-        style="margin:15px 0;"
-      >
-        Приложение запущено
-      </p>
-
-      <div
-        style="
-          font-size:42px;
-          margin:20px;
-        "
-      >
-        ✓
+        ✓ Приложение запущено
       </div>
 
       <button
         class="secondary"
-        onclick="renderHome()"
+        style="
+          width:100%;
+          margin-top:25px;
+        "
+        onclick="
+          renderApp(${item.id})
+        "
       >
-        Вернуться в каталог
+        Вернуться
       </button>
 
     </div>
   `;
 }
 
-function renderFav() {
+function renderFavorites() {
 
-  const list = demo.filter(
-    x => isFav(x.id)
-  );
+  const list =
+    apps.filter(
+      item => isFavorite(item.id)
+    );
 
   app.innerHTML = `
 
-    <h2>
+    <h1>
       Избранное
-    </h2>
+    </h1>
 
     ${
       list.length
-        ? list.map(row).join("")
+        ? list
+            .map(renderCard)
+            .join("")
         : `
           <div class="empty">
-            Нет избранных приложений
+            Нет избранных приложений.
             <br><br>
             Добавляй приложения
             кнопкой ♡
@@ -598,17 +641,16 @@ function renderFav() {
 
 function renderProfile() {
 
-  const hist = history
-    .map(id =>
-      demo.find(x => x.id === id)
-    )
-    .filter(Boolean);
+  const historyApps =
+    history
+      .map(id => getApp(id))
+      .filter(Boolean);
 
   app.innerHTML = `
 
-    <h2>
+    <h1>
       Профиль
-    </h2>
+    </h1>
 
     <div class="card">
 
@@ -616,15 +658,15 @@ function renderProfile() {
 
         <div
           style="
-            width:58px;
-            height:58px;
+            width:64px;
+            height:64px;
             border-radius:50%;
             background:#111;
-            color:#fff;
             display:flex;
             align-items:center;
             justify-content:center;
-            font-size:24px;
+            font-size:26px;
+            color:#d4af37;
           "
         >
           V
@@ -648,44 +690,43 @@ function renderProfile() {
 
     <div class="card">
 
-      <b>
+      <div>
         Избранное:
-      </b>
+        <b>${favorites.length}</b>
+      </div>
 
-      ${favorites.length}
-
-      <br>
-
-      <b>
+      <div style="margin-top:10px">
         Установлено:
-      </b>
+        <b>${installed.length}</b>
+      </div>
 
-      ${installed.length}
-
-      <br>
-
-      <b>
+      <div style="margin-top:10px">
         История:
-      </b>
-
-      ${history.length}
+        <b>${history.length}</b>
+      </div>
 
     </div>
 
     ${
-      hist.length
+      historyApps.length
         ? `
           <h2>
             История
           </h2>
 
-          ${hist.map(row).join("")}
+          ${historyApps
+            .map(renderCard)
+            .join("")}
         `
         : ""
     }
 
     <button
       class="secondary"
+      style="
+        width:100%;
+        margin-top:10px;
+      "
       onclick="
         history=[];
         save();
@@ -694,35 +735,42 @@ function renderProfile() {
     >
       Очистить историю
     </button>
+
+    <button
+      class="secondary"
+      style="
+        width:100%;
+        margin-top:10px;
+      "
+      onclick="
+        installed=[];
+        save();
+        renderProfile();
+      "
+    >
+      Сбросить установки
+    </button>
   `;
 }
 
-function setTab(tab) {
+function renderCurrent() {
 
-  document
-    .querySelectorAll(".tab")
-    .forEach(button => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.tab === tab
-      );
-
-    });
-
-  if (search) {
-    search.classList.toggle(
-      "hidden",
-      tab !== "home"
+  const active =
+    document.querySelector(
+      ".tab.active"
     );
-  }
+
+  const tab =
+    active
+      ? active.dataset.tab
+      : "home";
 
   if (tab === "home") {
     renderHome();
   }
 
   if (tab === "favorites") {
-    renderFav();
+    renderFavorites();
   }
 
   if (tab === "profile") {
@@ -734,13 +782,45 @@ document
   .querySelectorAll(".tab")
   .forEach(button => {
 
-    button.onclick = () =>
-      setTab(button.dataset.tab);
+    button.addEventListener(
+      "click",
+      () => {
+
+        document
+          .querySelectorAll(".tab")
+          .forEach(item =>
+            item.classList.remove(
+              "active"
+            )
+          );
+
+        button.classList.add(
+          "active"
+        );
+
+        renderCurrent();
+      }
+    );
 
   });
 
-if (search) {
-  search.oninput = renderHome;
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener(
+    "load",
+    () => {
+
+      navigator.serviceWorker
+        .register("sw.js")
+        .catch(error => {
+          console.error(
+            "Service Worker error:",
+            error
+          );
+        });
+
+    }
+  );
 }
 
 renderHome();
