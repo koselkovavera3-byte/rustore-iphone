@@ -4,6 +4,7 @@ const demo = [
     name: "RuStore",
     dev: "RuStore",
     rating: 4.7,
+    category: "Магазины",
     desc: "Каталог приложений для российских пользователей.",
     icon: "icon.svg"
   },
@@ -12,6 +13,7 @@ const demo = [
     name: "ВКонтакте",
     dev: "VK",
     rating: 4.6,
+    category: "Социальные",
     desc: "Общение, музыка, видео и сообщества.",
     icon: "icon.svg"
   },
@@ -20,6 +22,7 @@ const demo = [
     name: "Госуслуги",
     dev: "Минцифры России",
     rating: 4.8,
+    category: "Государство",
     desc: "Государственные услуги в одном приложении.",
     icon: "icon.svg"
   },
@@ -28,6 +31,7 @@ const demo = [
     name: "СберБанк",
     dev: "Сбер",
     rating: 4.9,
+    category: "Финансы",
     desc: "Банковские сервисы и платежи.",
     icon: "icon.svg"
   }
@@ -45,8 +49,15 @@ const app = document.getElementById("app");
 const search = document.getElementById("search");
 
 function save() {
-  localStorage.setItem("favorites", JSON.stringify(favorites));
-  localStorage.setItem("history", JSON.stringify(history));
+  localStorage.setItem(
+    "favorites",
+    JSON.stringify(favorites)
+  );
+
+  localStorage.setItem(
+    "history",
+    JSON.stringify(history)
+  );
 }
 
 function isFav(id) {
@@ -59,7 +70,7 @@ function toggleFav(id) {
     : [...favorites, id];
 
   save();
-  render();
+  renderHome();
 }
 
 function pushHistory(id) {
@@ -74,6 +85,7 @@ function pushHistory(id) {
 function row(x) {
   return `
     <div class="card">
+
       <div class="row">
 
         <img
@@ -83,9 +95,19 @@ function row(x) {
         >
 
         <div style="flex:1">
-          <div class="name">${x.name}</div>
-          <div class="muted">${x.dev}</div>
-          <div class="rating">★ ${x.rating}</div>
+
+          <div class="name">
+            ${x.name}
+          </div>
+
+          <div class="muted">
+            ${x.dev}
+          </div>
+
+          <div class="rating">
+            ★ ${x.rating}
+          </div>
+
         </div>
 
         <button
@@ -108,33 +130,61 @@ function row(x) {
       >
         Открыть
       </button>
+
     </div>
   `;
 }
 
 function renderHome() {
-  const q = search.value.trim().toLowerCase();
+
+  const q = search.value
+    .trim()
+    .toLowerCase();
 
   const list = demo.filter(x =>
-    `${x.name} ${x.dev} ${x.desc}`
+    (
+      x.name +
+      x.dev +
+      x.desc +
+      x.category
+    )
       .toLowerCase()
       .includes(q)
   );
 
-  app.innerHTML = list.length
-    ? list.map(row).join("")
-    : `<div class="empty">Ничего не найдено</div>`;
+  app.innerHTML = `
+    <h2>
+      Приложения
+    </h2>
+
+    ${
+      list.length
+        ? list.map(row).join("")
+        : `
+          <div class="empty">
+            Ничего не найдено
+          </div>
+        `
+    }
+  `;
 }
 
 function openApp(id) {
-  const x = demo.find(a => a.id === id);
+
+  const x = demo.find(
+    item => item.id === id
+  );
 
   if (!x) return;
 
   pushHistory(id);
 
   app.innerHTML = `
-    <button class="back" onclick="renderHome()">
+
+    <button
+      class="back"
+      onclick="renderHome()"
+    >
       ‹ Назад
     </button>
 
@@ -148,11 +198,28 @@ function openApp(id) {
           alt="${x.name}"
         >
 
-        <div>
-          <div class="name">${x.name}</div>
-          <div class="muted">${x.dev}</div>
-          <div class="rating">★ ${x.rating}</div>
+        <div style="flex:1">
+
+          <div class="name">
+            ${x.name}
+          </div>
+
+          <div class="muted">
+            ${x.dev}
+          </div>
+
+          <div class="rating">
+            ★ ${x.rating}
+          </div>
+
         </div>
+
+        <button
+          class="heart"
+          onclick="toggleFav(${x.id}); openApp(${x.id})"
+        >
+          ${isFav(x.id) ? "♥" : "♡"}
+        </button>
 
       </div>
 
@@ -160,83 +227,157 @@ function openApp(id) {
         ${x.desc}
       </div>
 
+      <div class="muted" style="margin-top:12px">
+        Категория: ${x.category}
+      </div>
+
       <button
-        style="margin-top:14px"
-        onclick="installDemo('${x.name}')"
+        style="
+          width:100%;
+          margin-top:18px;
+          height:48px;
+        "
+        onclick="openDemo('${x.name}')"
       >
         Открыть
       </button>
 
     </div>
 
-    <h2>О приложении</h2>
+    <h2>
+      О приложении
+    </h2>
 
     <div class="card">
+
       <div class="desc">
         ${x.desc}
       </div>
-      <br>
-      Приложение доступно в каталоге RuStore.
+
+      <div class="desc">
+        Это демонстрационная страница
+        приложения в нашем RuStore MVP.
+      </div>
+
     </div>
 
-    <h2>Отзывы</h2>
+    <h2>
+      Отзывы
+    </h2>
 
     <div class="card">
-      <b>Пользователь</b>
-      <div>★★★★★</div>
+
+      <b>
+        Пользователь
+      </b>
+
+      <div style="margin-top:5px">
+        ★★★★★
+      </div>
+
       <div class="muted">
         Отличное приложение.
       </div>
+
     </div>
 
     <div class="card">
-      <b>Пользователь</b>
-      <div>★★★★☆</div>
+
+      <b>
+        Пользователь
+      </b>
+
+      <div style="margin-top:5px">
+        ★★★★☆
+      </div>
+
       <div class="muted">
         Работает хорошо.
       </div>
+
     </div>
   `;
 }
 
-function installDemo(name) {
+function openDemo(name) {
+
   alert(
-    "Страница приложения «" +
+    "Демонстрационный запуск приложения «" +
     name +
-    "» открыта. " +
-    "Подключение установки добавим следующим этапом."
+    "»."
   );
 }
 
 function renderFav() {
-  const list = demo.filter(x => isFav(x.id));
 
-  app.innerHTML = list.length
-    ? list.map(row).join("")
-    : `
-      <div class="empty">
-        Нет избранных приложений
-        <br><br>
-        Добавляй их кнопкой ♡
-      </div>
-    `;
+  const list = demo.filter(
+    x => isFav(x.id)
+  );
+
+  app.innerHTML = `
+    <h2>
+      Избранное
+    </h2>
+
+    ${
+      list.length
+        ? list.map(row).join("")
+        : `
+          <div class="empty">
+            Нет избранных приложений
+            <br><br>
+            Добавляй приложения
+            кнопкой ♡
+          </div>
+        `
+    }
+  `;
 }
 
 function renderProfile() {
+
   const hist = history
-    .map(id => demo.find(x => x.id === id))
+    .map(id =>
+      demo.find(x => x.id === id)
+    )
     .filter(Boolean);
 
   app.innerHTML = `
+
+    <h2>
+      Профиль
+    </h2>
+
     <div class="card">
 
       <div class="row">
 
-        <div style="font-size:48px">◯</div>
+        <div
+          style="
+            width:58px;
+            height:58px;
+            border-radius:50%;
+            background:#111;
+            color:#fff;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:24px;
+          "
+        >
+          V
+        </div>
 
         <div>
-          <div class="name">Пользователь</div>
-          <div class="muted">Локальный профиль</div>
+
+          <div class="name">
+            Пользователь
+          </div>
+
+          <div class="muted">
+            Локальный профиль
+          </div>
+
         </div>
 
       </div>
@@ -244,21 +385,39 @@ function renderProfile() {
     </div>
 
     <div class="card">
-      <b>Избранное:</b> ${favorites.length}
+
+      <b>
+        Избранное:
+      </b>
+
+      ${favorites.length}
+
       <br>
-      <b>История:</b> ${history.length}
+
+      <b>
+        История:
+      </b>
+
+      ${history.length}
+
     </div>
 
     ${
       hist.length
-        ? `<h2>История</h2>${hist.map(row).join("")}`
+        ? `
+          <h2>
+            История
+          </h2>
+
+          ${hist.map(row).join("")}
+        `
         : ""
     }
 
     <button
       class="secondary"
       onclick="
-        history = [];
+        history=[];
         save();
         renderProfile();
       "
@@ -269,32 +428,44 @@ function renderProfile() {
 }
 
 function setTab(tab) {
-  document.querySelectorAll(".tab").forEach(button => {
-    button.classList.toggle(
-      "active",
-      button.dataset.tab === tab
-    );
-  });
+
+  document
+    .querySelectorAll(".tab")
+    .forEach(button => {
+
+      button.classList.toggle(
+        "active",
+        button.dataset.tab === tab
+      );
+
+    });
 
   search.classList.toggle(
     "hidden",
     tab !== "home"
   );
 
-  if (tab === "home") renderHome();
-  if (tab === "favorites") renderFav();
-  if (tab === "profile") renderProfile();
+  if (tab === "home") {
+    renderHome();
+  }
+
+  if (tab === "favorites") {
+    renderFav();
+  }
+
+  if (tab === "profile") {
+    renderProfile();
+  }
 }
 
-function render() {
-  const active = document.querySelector(".tab.active");
-  const tab = active?.dataset.tab || "home";
-  setTab(tab);
-}
+document
+  .querySelectorAll(".tab")
+  .forEach(button => {
 
-document.querySelectorAll(".tab").forEach(button => {
-  button.onclick = () => setTab(button.dataset.tab);
-});
+    button.onclick = () =>
+      setTab(button.dataset.tab);
+
+  });
 
 search.oninput = renderHome;
 
