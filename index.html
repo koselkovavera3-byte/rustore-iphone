@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
+
   <meta charset="UTF-8">
 
   <meta
     name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
   >
 
   <meta
     name="theme-color"
-    content="#0a0e1a"
+    content="#0b0d12"
   >
 
   <meta
@@ -28,7 +30,10 @@
     content="RuStore"
   >
 
-  <title>RuStore</title>
+  <meta
+    name="description"
+    content="Каталог приложений"
+  >
 
   <link
     rel="manifest"
@@ -36,27 +41,40 @@
   >
 
   <link
+    rel="icon"
+    href="icon.svg"
+    type="image/svg+xml"
+  >
+
+  <link
     rel="apple-touch-icon"
     href="icon.svg"
   >
 
+  <title>RuStore</title>
+
   <style>
+
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
       -webkit-tap-highlight-color: transparent;
     }
 
+    html {
+      background: #0b0d12;
+    }
+
     body {
+      margin: 0;
+      background: #0b0d12;
+      color: #f5f5f7;
       font-family:
         -apple-system,
         BlinkMacSystemFont,
-        "Segoe UI",
+        "SF Pro Display",
+        "SF Pro Text",
+        Arial,
         sans-serif;
-
-      background: #0a0e1a;
-      color: #f4f4f4;
       min-height: 100vh;
     }
 
@@ -69,49 +87,94 @@
       cursor: pointer;
     }
 
-    #app {
-      max-width: 720px;
+    .shell {
+      width: 100%;
+      max-width: 760px;
       margin: 0 auto;
-      padding: 20px 16px 110px;
+      min-height: 100vh;
+      padding-bottom: 100px;
+    }
+
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding:
+        calc(env(safe-area-inset-top) + 14px)
+        16px
+        14px;
+      background: rgba(11, 13, 18, .94);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand img {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+    }
+
+    .brand-title {
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: #858b98;
+      margin-top: 2px;
+    }
+
+    main {
+      padding: 18px 16px 0;
     }
 
     h1 {
       font-size: 28px;
-      margin-bottom: 8px;
+      line-height: 1.1;
+      margin: 8px 0 18px;
     }
 
     h2 {
-      font-size: 22px;
-      margin: 20px 0 14px;
-    }
-
-    .muted {
-      color: #8b8f99;
-      font-size: 13px;
+      font-size: 21px;
+      margin: 26px 0 12px;
     }
 
     .search {
       width: 100%;
       height: 48px;
       border: 1px solid rgba(255,255,255,.08);
-      background: rgba(255,255,255,.06);
+      border-radius: 15px;
+      background: #151922;
       color: white;
-      border-radius: 14px;
       padding: 0 16px;
       outline: none;
-      margin-bottom: 14px;
+      margin-bottom: 8px;
     }
 
     .search:focus {
-      border-color: #d4af37;
+      border-color: rgba(255,255,255,.22);
+    }
+
+    .search::placeholder {
+      color: #737985;
     }
 
     .card {
-      background: rgba(255,255,255,.055);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 18px;
+      background: #151922;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 20px;
       padding: 16px;
       margin-bottom: 12px;
+      box-shadow:
+        0 8px 30px rgba(0,0,0,.16);
     }
 
     .row {
@@ -121,140 +184,109 @@
     }
 
     .icon {
-      width: 58px;
-      height: 58px;
+      width: 62px;
+      height: 62px;
       border-radius: 16px;
       object-fit: cover;
-      background: #111;
       flex-shrink: 0;
+      background: #222;
+    }
+
+    .large-icon {
+      width: 92px;
+      height: 92px;
+      border-radius: 24px;
+      object-fit: cover;
+      display: block;
+      margin: 0 auto 16px;
     }
 
     .name {
       font-size: 17px;
-      font-weight: 700;
-      margin-bottom: 3px;
+      font-weight: 750;
     }
 
-    .rating {
-      color: #d4af37;
-      margin-top: 5px;
+    .muted {
+      color: #858b98;
       font-size: 13px;
     }
 
+    .rating {
+      margin-top: 5px;
+      font-size: 13px;
+      color: #d9dce2;
+    }
+
     .desc {
-      color: #b4b7c0;
+      color: #c4c8d0;
+      line-height: 1.45;
       font-size: 14px;
-      line-height: 1.5;
-      margin-top: 12px;
+      margin-top: 13px;
     }
 
     .heart {
-      width: 42px;
-      height: 42px;
       border: 0;
-      border-radius: 50%;
-      background: rgba(255,255,255,.06);
-      color: #d4af37;
-      font-size: 21px;
+      background: transparent;
+      color: #fff;
+      font-size: 27px;
+      padding: 5px;
+      min-width: 40px;
     }
 
-    .secondary,
-    .primary {
+    .primary,
+    .secondary {
       border: 0;
-      border-radius: 13px;
+      border-radius: 14px;
       min-height: 46px;
       padding: 0 18px;
       font-weight: 700;
     }
 
     .primary {
-      background: #d4af37;
-      color: #0a0e1a;
+      background: #ffffff;
+      color: #111318;
     }
 
     .secondary {
-      background: rgba(255,255,255,.08);
-      color: white;
+      background: #252a35;
+      color: #ffffff;
     }
 
     .back {
       border: 0;
       background: transparent;
-      color: #d4af37;
-      padding: 8px 0 18px;
+      color: #fff;
+      padding: 5px 0 16px;
       font-size: 16px;
     }
 
     .empty {
       text-align: center;
-      padding: 60px 20px;
-      color: #777;
+      color: #858b98;
+      padding: 45px 20px;
+      background: #151922;
+      border-radius: 20px;
+    }
+
+    .success {
+      color: #67d391;
+      font-weight: 700;
     }
 
     .progress {
-      width: 100%;
-      height: 9px;
-      background: rgba(255,255,255,.08);
-      border-radius: 20px;
+      height: 8px;
+      background: #292e39;
+      border-radius: 999px;
       overflow: hidden;
-      margin: 20px 0 10px;
+      margin: 22px 0 10px;
     }
 
     .progress-bar {
       height: 100%;
       width: 0;
-      background: #d4af37;
-      transition: width .2s ease;
-    }
-
-    .success {
-      color: #32cd32;
-      font-weight: 700;
-    }
-
-    .bottom-nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      height: 76px;
-      background: rgba(10,14,26,.96);
-      border-top: 1px solid rgba(255,255,255,.08);
-      display: flex;
-      justify-content: center;
-      z-index: 100;
-      backdrop-filter: blur(20px);
-    }
-
-    .nav-inner {
-      width: 100%;
-      max-width: 720px;
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-    }
-
-    .tab {
-      border: 0;
-      background: transparent;
-      color: #777;
-      font-size: 11px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 5px;
-    }
-
-    .tab span:first-child {
-      font-size: 22px;
-    }
-
-    .tab.active {
-      color: #d4af37;
-    }
-
-    .hidden {
-      display: none !important;
+      background: #fff;
+      border-radius: 999px;
+      transition: width .15s linear;
     }
 
     .install-card {
@@ -262,19 +294,155 @@
       padding: 30px 20px;
     }
 
-    .large-icon {
-      width: 100px;
-      height: 100px;
-      border-radius: 24px;
-      object-fit: cover;
-      margin-bottom: 18px;
+    .bottom-nav {
+      position: fixed;
+      z-index: 50;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding:
+        8px
+        10px
+        calc(8px + env(safe-area-inset-bottom));
+      background: rgba(15,17,23,.96);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid rgba(255,255,255,.07);
     }
+
+    .nav-inner {
+      max-width: 760px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+
+    .tab {
+      border: 0;
+      background: transparent;
+      color: #777d89;
+      border-radius: 13px;
+      min-height: 50px;
+      font-size: 12px;
+    }
+
+    .tab.active {
+      color: white;
+      background: #202530;
+    }
+
+    .tab-icon {
+      display: block;
+      font-size: 19px;
+      margin-bottom: 2px;
+    }
+
+    .install-banner {
+      position: fixed;
+      left: 12px;
+      right: 12px;
+      bottom: 82px;
+      z-index: 60;
+      background: #191d27;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 18px;
+      padding: 13px;
+      box-shadow: 0 15px 45px rgba(0,0,0,.4);
+    }
+
+    .banner-row {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .banner-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+    }
+
+    .banner-text {
+      flex: 1;
+    }
+
+    .banner-title {
+      font-weight: 750;
+      font-size: 14px;
+    }
+
+    .banner-description {
+      color: #858b98;
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .banner-button {
+      min-height: 38px;
+      border: 0;
+      border-radius: 11px;
+      padding: 0 11px;
+      background: white;
+      color: #111;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    @media (min-width: 700px) {
+
+      .shell {
+        padding-bottom: 110px;
+      }
+
+      main {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+      .header {
+        padding-left: 24px;
+        padding-right: 24px;
+      }
+
+    }
+
   </style>
+
 </head>
 
 <body>
 
-  <main id="app"></main>
+  <div class="shell">
+
+    <header class="header">
+
+      <div class="brand">
+
+        <img
+          src="icon.svg"
+          alt="RuStore"
+        >
+
+        <div>
+
+          <div class="brand-title">
+            RuStore
+          </div>
+
+          <div class="brand-subtitle">
+            Каталог приложений
+          </div>
+
+        </div>
+
+      </div>
+
+    </header>
+
+    <main id="app"></main>
+
+  </div>
 
   <nav class="bottom-nav">
 
@@ -284,24 +452,24 @@
         class="tab active"
         data-tab="home"
       >
-        <span>⌂</span>
-        <span>Приложения</span>
+        <span class="tab-icon">⌂</span>
+        Главная
       </button>
 
       <button
         class="tab"
         data-tab="favorites"
       >
-        <span>♡</span>
-        <span>Избранное</span>
+        <span class="tab-icon">♡</span>
+        Избранное
       </button>
 
       <button
         class="tab"
         data-tab="profile"
       >
-        <span>◯</span>
-        <span>Профиль</span>
+        <span class="tab-icon">◯</span>
+        Профиль
       </button>
 
     </div>
@@ -311,4 +479,5 @@
   <script src="app.js"></script>
 
 </body>
+
 </html>
