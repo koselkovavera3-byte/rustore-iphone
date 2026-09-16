@@ -1,26 +1,21 @@
 /*
- * RuStore / Veyra Store
- * Marketplace Frontend V2
+ * iOS App Hub
+ * Frontend V3
+ *
+ * Discovery → Availability → Recovery
  *
  * ВАЖНО:
- * Этот frontend НЕ скачивает чужие IPA напрямую.
- * Для настоящей установки iOS нужен Apple-approved
- * Alternative App Marketplace + MarketplaceKit.
- *
- * Сейчас приложение:
- * - показывает каталог;
- * - определяет iPhone / Android;
- * - показывает правильный сценарий;
- * - готово принимать данные от backend API;
- * - не просит Apple ID / пароль;
- * - не делает вид, что PWA = native IPA.
+ * Этот frontend НЕ скачивает IPA напрямую.
+ * НЕ запрашивает Apple ID или пароль.
+ * Native installation остаётся отдельным будущим
+ * backend / approved distribution integration.
  */
 
 const CONFIG = {
   apiBase: "",
   catalogEndpoint: "/api/apps",
-  marketplaceName: "RuStore",
-  version: "2.0.0"
+  marketplaceName: "iOS App Hub",
+  version: "3.0.0"
 };
 
 /* --------------------------------------------------
@@ -34,18 +29,13 @@ const apps = [
     developer: "VK",
     rating: 4.6,
     category: "Социальные",
-    description:
-      "Общение, музыка, видео и сообщества.",
+    description: "Общение, музыка, видео и сообщества.",
     icon: "icon.svg",
-
-    /*
-     * Пока false.
-     * После получения официального distribution
-     * package через Apple backend станет true.
-     */
     nativeIOSAvailable: false,
-
-    webUrl: "https://m.vk.ru/feed"
+    appStoreStatus: "unavailable",
+    recoverySupported: true,
+    webUrl: "https://m.vk.ru/feed",
+    officialUrl: "https://vk.com/"
   },
 
   {
@@ -54,13 +44,13 @@ const apps = [
     developer: "Минцифры России",
     rating: 4.8,
     category: "Государство",
-    description:
-      "Государственные услуги в одном приложении.",
+    description: "Государственные услуги в одном приложении.",
     icon: "icon.svg",
-
     nativeIOSAvailable: false,
-
-    webUrl: "https://www.gosuslugi.ru/"
+    appStoreStatus: "unavailable",
+    recoverySupported: true,
+    webUrl: "https://www.gosuslugi.ru/",
+    officialUrl: "https://www.gosuslugi.ru/"
   },
 
   {
@@ -69,13 +59,13 @@ const apps = [
     developer: "Сбер",
     rating: 4.9,
     category: "Финансы",
-    description:
-      "Банковские сервисы и платежи.",
+    description: "Банковские сервисы и платежи.",
     icon: "icon.svg",
-
     nativeIOSAvailable: false,
-
-    webUrl: "https://www.sberbank.ru/"
+    appStoreStatus: "unavailable",
+    recoverySupported: true,
+    webUrl: "https://www.sberbank.ru/",
+    officialUrl: "https://www.sberbank.ru/"
   },
 
   {
@@ -84,13 +74,13 @@ const apps = [
     developer: "RuStore",
     rating: 4.7,
     category: "Магазины",
-    description:
-      "Каталог приложений для российских пользователей.",
+    description: "Каталог приложений для российских пользователей.",
     icon: "icon.svg",
-
     nativeIOSAvailable: false,
-
-    webUrl: "https://www.rustore.ru/"
+    appStoreStatus: "unavailable",
+    recoverySupported: false,
+    webUrl: "https://www.rustore.ru/",
+    officialUrl: "https://www.rustore.ru/"
   }
 ];
 
@@ -100,6 +90,9 @@ const apps = [
 
 let favorites = load("favorites", []);
 let history = load("history", []);
+
+let currentView = "home";
+let currentCategory = "Все";
 
 const appRoot = document.getElementById("app");
 
@@ -169,7 +162,7 @@ function isStandalone() {
 }
 
 /* --------------------------------------------------
-   APP HELPERS
+   HELPERS
 -------------------------------------------------- */
 
 function getApp(id) {
@@ -180,6 +173,15 @@ function getApp(id) {
 
 function isFavorite(id) {
   return favorites.includes(id);
+}
+
+function getCategories() {
+  return [
+    "Все",
+    ...new Set(
+      apps.map(item => item.category)
+    )
+  ];
 }
 
 function toggleFavorite(id) {
@@ -197,7 +199,6 @@ function toggleFavorite(id) {
   }
 
   save();
-
   renderCurrent();
 }
 
@@ -211,6 +212,50 @@ function addHistory(id) {
   ].slice(0, 30);
 
   save();
+}
+
+/* --------------------------------------------------
+   STATUS
+-------------------------------------------------- */
+
+function getStatus(item) {
+
+  if (item.nativeIOSAvailable) {
+    return {
+      text: "Доступно для установки",
+      className: "status-available"
+    };
+  }
+
+  if (item.recoverySupported) {
+    return {
+      text: "Проверить восстановление",
+      className: "status-recovery"
+    };
+  }
+
+  return {
+    text: "Официальный источник",
+    className: "status-web"
+  };
+}
+
+function renderStatus(item) {
+
+  const status = getStatus(item);
+
+  return `
+    <div
+      class="status ${status.className}"
+      style="
+        margin-top:8px;
+        font-size:13px;
+        font-weight:600;
+      "
+    >
+      ${escapeHTML(status.text)}
+    </div>
+  `;
 }
 
 /* --------------------------------------------------
@@ -244,11 +289,14 @@ function renderCard(item) {
             ★ ${item.rating}
           </div>
 
+          ${renderStatus(item)}
+
         </div>
 
         <button
           class="heart"
           type="button"
+          aria-label="Избранное"
           onclick="toggleFavorite('${item.id}')"
         >
           ${
@@ -288,10 +336,58 @@ function renderCard(item) {
 }
 
 /* --------------------------------------------------
+   CATEGORY FILTER
+-------------------------------------------------- */
+
+function renderCategories() {
+
+  return `
+    <div
+      style="
+        display:flex;
+        gap:8px;
+        overflow-x:auto;
+        padding:4px 0 14px;
+        scrollbar-width:none;
+      "
+    >
+
+      ${getCategories()
+        .map(category => `
+          <button
+            type="button"
+            class="${
+              currentCategory === category
+                ? "primary"
+                : "secondary"
+            }"
+            style="
+              white-space:nowrap;
+              padding:9px 14px;
+              border-radius:18px;
+            "
+            onclick="
+              currentCategory =
+                '${escapeHTML(category)}';
+              renderHome();
+            "
+          >
+            ${escapeHTML(category)}
+          </button>
+        `)
+        .join("")}
+
+    </div>
+  `;
+}
+
+/* --------------------------------------------------
    HOME
 -------------------------------------------------- */
 
 function renderHome() {
+
+  currentView = "home";
 
   appRoot.innerHTML = `
 
@@ -300,11 +396,14 @@ function renderHome() {
       class="search"
       placeholder="Поиск приложений"
       autocomplete="off"
+      aria-label="Поиск приложений"
     >
 
     <h1>
       Приложения
     </h1>
+
+    ${renderCategories()}
 
     <div
       id="appList"
@@ -327,6 +426,10 @@ function renderHome() {
     const filtered =
       apps.filter(item => {
 
+        const categoryMatches =
+          currentCategory === "Все" ||
+          item.category === currentCategory;
+
         const text = [
           item.name,
           item.developer,
@@ -336,7 +439,10 @@ function renderHome() {
           .join(" ")
           .toLowerCase();
 
-        return text.includes(query);
+        return (
+          categoryMatches &&
+          text.includes(query)
+        );
       });
 
     list.innerHTML =
@@ -369,6 +475,7 @@ function openApp(id) {
 
   if (!item) return;
 
+  currentView = "app";
   addHistory(id);
 
   appRoot.innerHTML = `
@@ -404,6 +511,8 @@ function openApp(id) {
           <div class="rating">
             ★ ${item.rating}
           </div>
+
+          ${renderStatus(item)}
 
         </div>
 
@@ -469,43 +578,14 @@ function openApp(id) {
 
     </div>
 
-    <h2>
-      Отзывы
-    </h2>
-
-    <div class="card">
-
-      <b>
-        Пользователь
-      </b>
-
-      <div style="margin-top:5px">
-        ★★★★★
-      </div>
-
-      <div
-        class="muted"
-        style="margin-top:5px"
-      >
-        Отличное приложение.
-      </div>
-
-    </div>
   `;
 }
 
 /* --------------------------------------------------
-   INSTALL AREA
+   INSTALL / AVAILABILITY
 -------------------------------------------------- */
 
 function renderInstallArea(item) {
-
-  /*
-   * НАСТОЯЩАЯ iOS УСТАНОВКА
-   *
-   * Здесь в будущем появится MarketplaceKit URI,
-   * сформированный backend + Apple verification token.
-   */
 
   if (isIOS()) {
 
@@ -518,12 +598,13 @@ function renderInstallArea(item) {
         >
 
           <h3>
-            Установка приложения
+            Установка
           </h3>
 
           <p class="desc">
             Доступна официальная версия
-            для альтернативной дистрибуции.
+            для поддерживаемого канала
+            распространения.
           </p>
 
           <button
@@ -535,7 +616,7 @@ function renderInstallArea(item) {
             type="button"
             onclick="installNative('${item.id}')"
           >
-             Установить приложение
+            Установить приложение
           </button>
 
         </div>
@@ -549,30 +630,45 @@ function renderInstallArea(item) {
       >
 
         <h3>
-          Приложение для iPhone
+          Доступность на iPhone
         </h3>
 
         <p class="desc">
-          Нативная установка пока
-          не подключена к Apple Marketplace.
+          Нативная установка через
+          ${escapeHTML(CONFIG.marketplaceName)}
+          пока не подключена.
         </p>
 
-        <p class="muted">
-          Сейчас можно открыть
-          официальный мобильный сервис.
-        </p>
+        ${
+          item.recoverySupported
+            ? `
+              <button
+                class="primary"
+                style="
+                  width:100%;
+                  height:50px;
+                  margin-top:10px;
+                "
+                type="button"
+                onclick="openRecovery('${item.id}')"
+              >
+                Проверить восстановление
+              </button>
+            `
+            : ""
+        }
 
         <button
-          class="primary"
+          class="secondary"
           style="
             width:100%;
-            height:50px;
+            height:48px;
             margin-top:10px;
           "
           type="button"
           onclick="openWebVersion('${item.id}')"
         >
-          Открыть мобильную версию
+          Открыть официальный сервис
         </button>
 
         ${
@@ -588,7 +684,7 @@ function renderInstallArea(item) {
                 type="button"
                 onclick="showIOSInstructions('${item.id}')"
               >
-                Установить веб-версию на экран Домой
+                Добавить веб-версию на экран Домой
               </button>
             `
             : ""
@@ -611,9 +707,8 @@ function renderInstallArea(item) {
         </h3>
 
         <p class="desc">
-          Способ установки зависит
-          от официального канала
-          распространения приложения.
+          Открой официальный источник
+          приложения.
         </p>
 
         <button
@@ -659,6 +754,111 @@ function renderInstallArea(item) {
 }
 
 /* --------------------------------------------------
+   RECOVERY
+-------------------------------------------------- */
+
+function openRecovery(id) {
+
+  const item = getApp(id);
+
+  if (!item) return;
+
+  currentView = "recovery";
+  addHistory(id);
+
+  appRoot.innerHTML = `
+
+    <button
+      class="back"
+      type="button"
+      onclick="openApp('${item.id}')"
+    >
+      ‹ Назад
+    </button>
+
+    <h1>
+      Восстановление
+    </h1>
+
+    <div class="card">
+
+      <div class="row">
+
+        <img
+          class="icon"
+          src="${item.icon}"
+          alt="${escapeHTML(item.name)}"
+        >
+
+        <div>
+
+          <div class="name">
+            ${escapeHTML(item.name)}
+          </div>
+
+          <div class="muted">
+            ${escapeHTML(item.developer)}
+          </div>
+
+        </div>
+
+      </div>
+
+      <h2 style="margin-top:20px">
+        Проверка доступности
+      </h2>
+
+      <p class="desc">
+        Если приложение ранее было связано
+        с твоей учётной записью Apple,
+        доступный официальный способ
+        восстановления можно проверить
+        отдельно.
+      </p>
+
+      <p class="muted">
+        iOS App Hub не запрашивает Apple ID
+        или пароль и не принимает их
+        на этом сайте.
+      </p>
+
+    </div>
+
+    <div class="card">
+
+      <h3>
+        Следующий шаг
+      </h3>
+
+      <p class="desc">
+        Сервис восстановления будет
+        подключаться отдельным клиентом
+        или официальным каналом.
+      </p>
+
+      <p class="muted">
+        Сейчас эта функция находится
+        в режиме подготовки.
+      </p>
+
+    </div>
+
+    <button
+      class="secondary"
+      style="
+        width:100%;
+        height:50px;
+      "
+      type="button"
+      onclick="openWebVersion('${item.id}')"
+    >
+      Открыть официальный источник
+    </button>
+
+  `;
+}
+
+/* --------------------------------------------------
    FUTURE NATIVE INSTALL
 -------------------------------------------------- */
 
@@ -669,18 +869,14 @@ async function installNative(id) {
   if (!item) return;
 
   /*
-   * Здесь НЕ должно быть:
+   * В production здесь должен находиться
+   * только подтверждённый backend flow.
    *
-   * window.location.href = ".ipa"
-   *
-   * и НЕ должно быть:
-   *
-   * Apple ID
-   * Apple password
-   *
-   * В production здесь будет запрос backend,
-   * который вернёт корректный MarketplaceKit
-   * installation URL + verification token.
+   * Никаких:
+   * - .ipa download
+   * - Apple ID
+   * - Apple password
+   * - обхода App Store
    */
 
   try {
@@ -725,7 +921,7 @@ async function installNative(id) {
     );
 
     showMessage(
-      "Нативная установка пока не подключена. Сначала подключим Apple Marketplace и backend."
+      "Нативная установка пока не подключена."
     );
   }
 }
@@ -738,7 +934,7 @@ function openWebVersion(id) {
 
   const item = getApp(id);
 
-  if (!item) return;
+  if (!item || !item.webUrl) return;
 
   window.location.href =
     item.webUrl;
@@ -754,6 +950,8 @@ function showIOSInstructions(id) {
 
   if (!item) return;
 
+  currentView = "instructions";
+
   appRoot.innerHTML = `
 
     <button
@@ -765,7 +963,7 @@ function showIOSInstructions(id) {
     </button>
 
     <h1>
-      Установка веб-версии
+      Веб-версия
     </h1>
 
     <div class="card">
@@ -779,14 +977,9 @@ function showIOSInstructions(id) {
       </h2>
 
       <p class="desc">
-        Это не настоящее IPA-приложение.
-        Мы не выдаём веб-версию за нативное
-        приложение.
-      </p>
-
-      <p class="desc">
-        На iPhone её можно добавить
-        на экран «Домой».
+        Это веб-версия, а не IPA.
+        Мы не выдаём веб-приложение
+        за нативное приложение iOS.
       </p>
 
     </div>
@@ -824,7 +1017,7 @@ function showIOSInstructions(id) {
 
       <p class="desc">
         В Safari нажми
-        <b>«Поделиться»</b>.
+        «Поделиться».
       </p>
 
       <div class="big-icon">
@@ -868,6 +1061,8 @@ function showIOSInstructions(id) {
 
 function renderFavorites() {
 
+  currentView = "favorites";
+
   const list =
     apps.filter(
       item => isFavorite(item.id)
@@ -905,6 +1100,8 @@ function renderFavorites() {
 -------------------------------------------------- */
 
 function renderProfile() {
+
+  currentView = "profile";
 
   const historyApps =
     history
@@ -1005,27 +1202,22 @@ function renderProfile() {
 
 function renderCurrent() {
 
-  const active =
-    document.querySelector(
-      ".tab.active"
-    );
-
-  const tab =
-    active
-      ? active.dataset.tab
-      : "home";
-
-  if (tab === "home") {
-    renderHome();
-  }
-
-  if (tab === "favorites") {
+  if (currentView === "favorites") {
     renderFavorites();
+    return;
   }
 
-  if (tab === "profile") {
+  if (currentView === "profile") {
     renderProfile();
+    return;
   }
+
+  if (currentView === "app") {
+    renderHome();
+    return;
+  }
+
+  renderHome();
 }
 
 document
@@ -1048,7 +1240,21 @@ document
           "active"
         );
 
-        renderCurrent();
+        const tab =
+          button.dataset.tab;
+
+        if (tab === "home") {
+          renderHome();
+        }
+
+        if (tab === "favorites") {
+          renderFavorites();
+        }
+
+        if (tab === "profile") {
+          renderProfile();
+        }
+
       }
     );
 
@@ -1059,6 +1265,9 @@ document
 -------------------------------------------------- */
 
 function showMessage(text) {
+
+  const previousView =
+    currentView;
 
   appRoot.innerHTML = `
 
@@ -1079,7 +1288,10 @@ function showMessage(text) {
           height:48px;
         "
         type="button"
-        onclick="renderCurrent()"
+        onclick="
+          currentView='${previousView}';
+          renderCurrent();
+        "
       >
         Назад
       </button>
@@ -1116,7 +1328,7 @@ if ("serviceWorker" in navigator) {
 
         const registration =
           await navigator.serviceWorker.register(
-            "./sW.js?v=20260916-3",
+            "./sW.js?v=20260916-4",
             {
               updateViaCache: "none"
             }
