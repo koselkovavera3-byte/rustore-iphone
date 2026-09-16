@@ -41,6 +41,8 @@ let favorites = load("favorites", []);
 let history = load("history", []);
 let installed = load("installed", []);
 
+let deferredPrompt = null;
+
 const app = document.getElementById("app");
 
 function load(key, fallback) {
@@ -70,28 +72,192 @@ function save() {
   );
 }
 
+/* -------------------------
+   PWA INSTALL
+------------------------- */
+
+window.addEventListener(
+  "beforeinstallprompt",
+  event => {
+
+    event.preventDefault();
+
+    deferredPrompt = event;
+
+    showInstallBanner();
+  }
+);
+
+window.addEventListener(
+  "appinstalled",
+  () => {
+
+    deferredPrompt = null;
+
+    const banner =
+      document.getElementById(
+        "installBanner"
+      );
+
+    if (banner) {
+      banner.remove();
+    }
+  }
+);
+
+function showInstallBanner() {
+
+  if (
+    document.getElementById(
+      "installBanner"
+    )
+  ) {
+    return;
+  }
+
+  const banner =
+    document.createElement("div");
+
+  banner.id = "installBanner";
+
+  banner.style.cssText = `
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:88px;
+    z-index:999;
+    background:#151b2b;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    padding:14px;
+    box-shadow:0 15px 40px rgba(0,0,0,.4);
+  `;
+
+  banner.innerHTML = `
+
+    <div
+      style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+      "
+    >
+
+      <img
+        src="icon.svg"
+        style="
+          width:48px;
+          height:48px;
+          border-radius:13px;
+        "
+      >
+
+      <div style="flex:1">
+
+        <div
+          style="
+            font-weight:700;
+            font-size:15px;
+          "
+        >
+          Установить RuStore
+        </div>
+
+        <div
+          style="
+            color:#8b8f99;
+            font-size:12px;
+            margin-top:3px;
+          "
+        >
+          Добавить приложение
+          на устройство
+        </div>
+
+      </div>
+
+      <button
+        id="installButton"
+        class="primary"
+        style="
+          min-height:40px;
+          padding:0 12px;
+        "
+      >
+        Установить
+      </button>
+
+    </div>
+  `;
+
+  document.body.appendChild(
+    banner
+  );
+
+  document
+    .getElementById("installButton")
+    .onclick = installPWA;
+}
+
+async function installPWA() {
+
+  if (!deferredPrompt) {
+
+    alert(
+      "На iPhone используйте меню «Поделиться» → «На экран Домой»."
+    );
+
+    return;
+  }
+
+  deferredPrompt.prompt();
+
+  await deferredPrompt.userChoice;
+
+  deferredPrompt = null;
+
+  const banner =
+    document.getElementById(
+      "installBanner"
+    );
+
+  if (banner) {
+    banner.remove();
+  }
+}
+
+/* -------------------------
+   HELPERS
+------------------------- */
+
 function getApp(id) {
+
   return apps.find(
     item => item.id === id
   );
 }
 
 function isFavorite(id) {
+
   return favorites.includes(id);
 }
 
 function isInstalled(id) {
+
   return installed.includes(id);
 }
 
 function toggleFavorite(id) {
 
   if (isFavorite(id)) {
+
     favorites =
       favorites.filter(
         item => item !== id
       );
+
   } else {
+
     favorites.push(id);
   }
 
@@ -112,103 +278,9 @@ function addHistory(id) {
   save();
 }
 
-function installApp(id) {
-
-  const item = getApp(id);
-
-  if (!item) return;
-
-  let progress = 0;
-
-  app.innerHTML = `
-
-    <div class="card install-card">
-
-      <img
-        class="large-icon"
-        src="${item.icon}"
-        alt="${item.name}"
-      >
-
-      <h1>
-        ${item.name}
-      </h1>
-
-      <p
-        id="installStatus"
-        class="muted"
-        style="margin-top:10px"
-      >
-        Подготовка установки…
-      </p>
-
-      <div class="progress">
-
-        <div
-          id="progressBar"
-          class="progress-bar"
-        ></div>
-
-      </div>
-
-      <div id="progressValue">
-        0%
-      </div>
-
-    </div>
-  `;
-
-  const timer = setInterval(() => {
-
-    progress += 10;
-
-    const bar =
-      document.getElementById(
-        "progressBar"
-      );
-
-    const value =
-      document.getElementById(
-        "progressValue"
-      );
-
-    const status =
-      document.getElementById(
-        "installStatus"
-      );
-
-    if (bar) {
-      bar.style.width =
-        progress + "%";
-    }
-
-    if (value) {
-      value.textContent =
-        progress + "%";
-    }
-
-    if (progress >= 100) {
-
-      clearInterval(timer);
-
-      if (status) {
-        status.innerHTML =
-          '<span class="success">Установка завершена ✓</span>';
-      }
-
-      if (!installed.includes(id)) {
-        installed.push(id);
-      }
-
-      save();
-
-      setTimeout(() => {
-        renderApp(id);
-      }, 900);
-    }
-
-  }, 180);
-}
+/* -------------------------
+   HOME
+------------------------- */
 
 function renderHome() {
 
@@ -225,13 +297,13 @@ function renderHome() {
       Приложения
     </h1>
 
-    <div
-      id="appList"
-    ></div>
+    <div id="appList"></div>
   `;
 
   const search =
-    document.getElementById("search");
+    document.getElementById(
+      "search"
+    );
 
   function update() {
 
@@ -248,8 +320,8 @@ function renderHome() {
           item.desc +
           item.category
         )
-        .toLowerCase()
-        .includes(query)
+          .toLowerCase()
+          .includes(query)
       );
 
     const list =
@@ -352,6 +424,10 @@ function renderCard(item) {
   `;
 }
 
+/* -------------------------
+   APP PAGE
+------------------------- */
+
 function renderApp(id) {
 
   const item = getApp(id);
@@ -422,47 +498,27 @@ function renderApp(id) {
         ${item.category}
       </div>
 
-      <div
+      <button
+        class="primary"
         style="
-          display:flex;
-          gap:10px;
+          width:100%;
           margin-top:20px;
+          height:48px;
+        "
+        onclick="
+          ${
+            isInstalled(item.id)
+              ? `launchApp(${item.id})`
+              : `installApp(${item.id})`
+          }
         "
       >
-
         ${
           isInstalled(item.id)
-            ? `
-              <button
-                class="primary"
-                style="
-                  flex:1;
-                  height:48px;
-                "
-                onclick="
-                  launchApp(${item.id})
-                "
-              >
-                Открыть
-              </button>
-            `
-            : `
-              <button
-                class="primary"
-                style="
-                  flex:1;
-                  height:48px;
-                "
-                onclick="
-                  installApp(${item.id})
-                "
-              >
-                Установить
-              </button>
-            `
+            ? "Открыть"
+            : "Установить"
         }
-
-      </div>
+      </button>
 
       ${
         isInstalled(item.id)
@@ -536,31 +592,114 @@ function renderApp(id) {
 
     </div>
 
-    <div class="card">
+  `;
+}
 
-      <b>
-        Пользователь
-      </b>
+/* -------------------------
+   DEMO INSTALL
+------------------------- */
 
-      <div
-        style="
-          color:#d4af37;
-          margin-top:5px;
-        "
+function installApp(id) {
+
+  const item = getApp(id);
+
+  if (!item) return;
+
+  let progress = 0;
+
+  app.innerHTML = `
+
+    <div
+      class="card install-card"
+      style="margin-top:40px"
+    >
+
+      <img
+        class="large-icon"
+        src="${item.icon}"
       >
-        ★★★★☆
+
+      <h1>
+        ${item.name}
+      </h1>
+
+      <p
+        id="installStatus"
+        class="muted"
+        style="margin-top:10px"
+      >
+        Установка…
+      </p>
+
+      <div class="progress">
+
+        <div
+          id="progressBar"
+          class="progress-bar"
+        ></div>
+
       </div>
 
-      <div
-        class="muted"
-        style="margin-top:5px"
-      >
-        Работает хорошо.
+      <div id="progressValue">
+        0%
       </div>
 
     </div>
   `;
+
+  const timer =
+    setInterval(() => {
+
+      progress += 10;
+
+      const bar =
+        document.getElementById(
+          "progressBar"
+        );
+
+      const value =
+        document.getElementById(
+          "progressValue"
+        );
+
+      if (bar) {
+        bar.style.width =
+          progress + "%";
+      }
+
+      if (value) {
+        value.textContent =
+          progress + "%";
+      }
+
+      if (progress >= 100) {
+
+        clearInterval(timer);
+
+        if (
+          !installed.includes(id)
+        ) {
+          installed.push(id);
+        }
+
+        save();
+
+        document.getElementById(
+          "installStatus"
+        ).innerHTML =
+          '<span class="success">✓ Установлено</span>';
+
+        setTimeout(() => {
+          renderApp(id);
+        }, 700);
+      }
+
+    }, 150);
 }
+
+/* -------------------------
+   LAUNCH
+------------------------- */
 
 function launchApp(id) {
 
@@ -578,7 +717,6 @@ function launchApp(id) {
       <img
         class="large-icon"
         src="${item.icon}"
-        alt="${item.name}"
       >
 
       <h1>
@@ -609,6 +747,10 @@ function launchApp(id) {
   `;
 }
 
+/* -------------------------
+   FAVORITES
+------------------------- */
+
 function renderFavorites() {
 
   const list =
@@ -638,6 +780,10 @@ function renderFavorites() {
     }
   `;
 }
+
+/* -------------------------
+   PROFILE
+------------------------- */
 
 function renderProfile() {
 
@@ -736,22 +882,12 @@ function renderProfile() {
       Очистить историю
     </button>
 
-    <button
-      class="secondary"
-      style="
-        width:100%;
-        margin-top:10px;
-      "
-      onclick="
-        installed=[];
-        save();
-        renderProfile();
-      "
-    >
-      Сбросить установки
-    </button>
   `;
 }
+
+/* -------------------------
+   NAVIGATION
+------------------------- */
 
 function renderCurrent() {
 
@@ -804,17 +940,28 @@ document
 
   });
 
-if ("serviceWorker" in navigator) {
+/* -------------------------
+   SERVICE WORKER
+------------------------- */
+
+if (
+  "serviceWorker" in navigator
+) {
 
   window.addEventListener(
     "load",
     () => {
 
       navigator.serviceWorker
-        .register("sw.js")
+        .register("sW.js")
+        .then(() => {
+          console.log(
+            "RuStore Service Worker активирован"
+          );
+        })
         .catch(error => {
           console.error(
-            "Service Worker error:",
+            "Service Worker:",
             error
           );
         });
