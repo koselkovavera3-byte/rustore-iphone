@@ -1,13 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="110" fill="#111111"/>
-  <circle cx="256" cy="256" r="150" fill="#ffffff"/>
-  <text
-    x="256"
-    y="300"
-    text-anchor="middle"
-    font-family="Arial, sans-serif"
-    font-size="190"
-    font-weight="700"
-    fill="#111111"
-  >R</text>
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 512 512"
+  width="512"
+  height="512"
+>
+  <rect
+    width="512"
+    height="512"
+    rx="112"
+    fill="#0b0d12"
+  />
+
+  <rect
+    x="56"
+    y="56"
+    width="400"
+    height="400"
+    rx="92"
+    fill="#ffffff"
+  />
+
+  <path
+    d="M170 145
+       H300
+       C360 145 390 175 390 225
+       C390 275 360 305 300 305
+       H245
+       L350 370
+       H275
+       L170 305
+       V145
+       Z
+
+       M225 195
+       V255
+       H295
+       C320 255 335 245 335 225
+       C335 205 320 195 295 195
+       Z"
+    fill="#0b0d12"
+  />
 </svg>
