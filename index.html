@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
-
 <head>
-
   <meta charset="UTF-8">
 
   <meta
@@ -12,7 +10,7 @@
 
   <meta
     name="theme-color"
-    content="#0b0d12"
+    content="#ffffff"
   >
 
   <meta
@@ -22,7 +20,7 @@
 
   <meta
     name="apple-mobile-web-app-status-bar-style"
-    content="black-translucent"
+    content="default"
   >
 
   <meta
@@ -30,25 +28,15 @@
     content="RuStore"
   >
 
-  <meta
-    name="description"
-    content="Каталог приложений"
-  >
-
   <link
     rel="manifest"
-    href="manifest.webmanifest"
+    href="./manifest.webmanifest"
   >
 
   <link
     rel="icon"
-    href="icon.svg"
+    href="./icon.svg"
     type="image/svg+xml"
-  >
-
-  <link
-    rel="apple-touch-icon"
-    href="icon.svg"
   >
 
   <title>RuStore</title>
@@ -57,25 +45,18 @@
 
     * {
       box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html {
-      background: #0b0d12;
     }
 
     body {
       margin: 0;
-      background: #0b0d12;
-      color: #f5f5f7;
+      background: #f5f5f7;
+      color: #111;
       font-family:
         -apple-system,
         BlinkMacSystemFont,
         "SF Pro Display",
-        "SF Pro Text",
-        Arial,
+        "Segoe UI",
         sans-serif;
-      min-height: 100vh;
     }
 
     button,
@@ -87,397 +68,240 @@
       cursor: pointer;
     }
 
-    .shell {
-      width: 100%;
-      max-width: 760px;
-      margin: 0 auto;
-      min-height: 100vh;
-      padding-bottom: 100px;
-    }
-
-    .header {
+    header {
       position: sticky;
       top: 0;
-      z-index: 20;
+      z-index: 10;
+      background: rgba(255,255,255,.94);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid #e5e5e7;
       padding:
-        calc(env(safe-area-inset-top) + 14px)
+        env(safe-area-inset-top)
         16px
-        14px;
-      background: rgba(11, 13, 18, .94);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-bottom: 1px solid rgba(255,255,255,.06);
+        12px
+        16px;
     }
 
     .brand {
       display: flex;
       align-items: center;
       gap: 10px;
+      font-weight: 700;
+      font-size: 22px;
     }
 
     .brand img {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-    }
-
-    .brand-title {
-      font-size: 21px;
-      font-weight: 800;
-    }
-
-    .brand-subtitle {
-      font-size: 12px;
-      color: #858b98;
-      margin-top: 2px;
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
     }
 
     main {
-      padding: 18px 16px 0;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 18px 16px 110px;
     }
 
     h1 {
-      font-size: 28px;
-      line-height: 1.1;
-      margin: 8px 0 18px;
+      font-size: 30px;
+      margin: 18px 0;
     }
 
     h2 {
-      font-size: 21px;
-      margin: 26px 0 12px;
+      font-size: 22px;
+      margin: 24px 0 12px;
+    }
+
+    h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
     }
 
     .search {
       width: 100%;
-      height: 48px;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 15px;
-      background: #151922;
-      color: white;
+      height: 46px;
+      border: 0;
+      border-radius: 14px;
+      background: #e9e9ee;
       padding: 0 16px;
       outline: none;
       margin-bottom: 8px;
     }
 
-    .search:focus {
-      border-color: rgba(255,255,255,.22);
-    }
-
-    .search::placeholder {
-      color: #737985;
-    }
-
     .card {
-      background: #151922;
-      border: 1px solid rgba(255,255,255,.07);
-      border-radius: 20px;
+      background: #fff;
+      border-radius: 18px;
       padding: 16px;
       margin-bottom: 12px;
       box-shadow:
-        0 8px 30px rgba(0,0,0,.16);
+        0 1px 3px rgba(0,0,0,.05);
     }
 
     .row {
       display: flex;
       align-items: center;
-      gap: 13px;
+      gap: 12px;
     }
 
     .icon {
-      width: 62px;
-      height: 62px;
-      border-radius: 16px;
+      width: 58px;
+      height: 58px;
+      border-radius: 15px;
       object-fit: cover;
       flex-shrink: 0;
-      background: #222;
-    }
-
-    .large-icon {
-      width: 92px;
-      height: 92px;
-      border-radius: 24px;
-      object-fit: cover;
-      display: block;
-      margin: 0 auto 16px;
     }
 
     .name {
+      font-weight: 700;
       font-size: 17px;
-      font-weight: 750;
     }
 
     .muted {
-      color: #858b98;
-      font-size: 13px;
+      color: #777;
+      font-size: 14px;
     }
 
     .rating {
       margin-top: 5px;
-      font-size: 13px;
-      color: #d9dce2;
+      font-size: 14px;
     }
 
     .desc {
-      color: #c4c8d0;
+      margin-top: 12px;
       line-height: 1.45;
-      font-size: 14px;
-      margin-top: 13px;
     }
 
     .heart {
       border: 0;
       background: transparent;
-      color: #fff;
       font-size: 27px;
-      padding: 5px;
-      min-width: 40px;
+      padding: 4px 6px;
     }
 
-    .primary,
-    .secondary {
+    button.primary,
+    button.secondary {
       border: 0;
-      border-radius: 14px;
+      border-radius: 13px;
       min-height: 46px;
-      padding: 0 18px;
-      font-weight: 700;
+      padding: 0 16px;
     }
 
     .primary {
-      background: #ffffff;
-      color: #111318;
+      background: #111;
+      color: #fff;
     }
 
     .secondary {
-      background: #252a35;
-      color: #ffffff;
+      background: #ededf2;
+      color: #111;
     }
 
     .back {
       border: 0;
       background: transparent;
-      color: #fff;
-      padding: 5px 0 16px;
-      font-size: 16px;
+      padding: 4px 0 16px;
+      font-size: 17px;
     }
 
     .empty {
       text-align: center;
-      color: #858b98;
-      padding: 45px 20px;
-      background: #151922;
-      border-radius: 20px;
-    }
-
-    .success {
-      color: #67d391;
-      font-weight: 700;
-    }
-
-    .progress {
-      height: 8px;
-      background: #292e39;
-      border-radius: 999px;
-      overflow: hidden;
-      margin: 22px 0 10px;
-    }
-
-    .progress-bar {
-      height: 100%;
-      width: 0;
+      color: #777;
       background: #fff;
-      border-radius: 999px;
-      transition: width .15s linear;
+      border-radius: 18px;
+      padding: 35px 20px;
     }
 
-    .install-card {
-      text-align: center;
-      padding: 30px 20px;
-    }
-
-    .bottom-nav {
+    .bottom {
       position: fixed;
-      z-index: 50;
       left: 0;
       right: 0;
       bottom: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-around;
       padding:
         8px
-        10px
+        8px
         calc(8px + env(safe-area-inset-bottom));
-      background: rgba(15,17,23,.96);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border-top: 1px solid rgba(255,255,255,.07);
-    }
-
-    .nav-inner {
-      max-width: 760px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 7px;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid #ddd;
     }
 
     .tab {
       border: 0;
       background: transparent;
-      color: #777d89;
-      border-radius: 13px;
-      min-height: 50px;
-      font-size: 12px;
+      color: #777;
+      padding: 7px 18px;
+      border-radius: 12px;
+      font-size: 13px;
     }
 
     .tab.active {
-      color: white;
-      background: #202530;
-    }
-
-    .tab-icon {
-      display: block;
-      font-size: 19px;
-      margin-bottom: 2px;
-    }
-
-    .install-banner {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 82px;
-      z-index: 60;
-      background: #191d27;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 18px;
-      padding: 13px;
-      box-shadow: 0 15px 45px rgba(0,0,0,.4);
-    }
-
-    .banner-row {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-    }
-
-    .banner-icon {
-      width: 46px;
-      height: 46px;
-      border-radius: 13px;
-    }
-
-    .banner-text {
-      flex: 1;
-    }
-
-    .banner-title {
-      font-weight: 750;
-      font-size: 14px;
-    }
-
-    .banner-description {
-      color: #858b98;
-      font-size: 11px;
-      margin-top: 3px;
-    }
-
-    .banner-button {
-      min-height: 38px;
-      border: 0;
-      border-radius: 11px;
-      padding: 0 11px;
-      background: white;
       color: #111;
       font-weight: 700;
-      font-size: 12px;
+      background: #eeeef2;
     }
 
-    @media (min-width: 700px) {
-
-      .shell {
-        padding-bottom: 110px;
-      }
-
-      main {
-        padding-left: 24px;
-        padding-right: 24px;
-      }
-
-      .header {
-        padding-left: 24px;
-        padding-right: 24px;
-      }
-
+    .install-box {
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 16px;
+      background: #f0f0f5;
     }
 
   </style>
-
 </head>
 
 <body>
 
-  <div class="shell">
+  <header>
 
-    <header class="header">
-
-      <div class="brand">
-
-        <img
-          src="icon.svg"
-          alt="RuStore"
-        >
-
-        <div>
-
-          <div class="brand-title">
-            RuStore
-          </div>
-
-          <div class="brand-subtitle">
-            Каталог приложений
-          </div>
-
-        </div>
-
-      </div>
-
-    </header>
-
-    <main id="app"></main>
-
-  </div>
-
-  <nav class="bottom-nav">
-
-    <div class="nav-inner">
-
-      <button
-        class="tab active"
-        data-tab="home"
+    <div class="brand">
+      <img
+        src="./icon.svg"
+        alt="RuStore"
       >
-        <span class="tab-icon">⌂</span>
-        Главная
-      </button>
 
-      <button
-        class="tab"
-        data-tab="favorites"
-      >
-        <span class="tab-icon">♡</span>
-        Избранное
-      </button>
-
-      <button
-        class="tab"
-        data-tab="profile"
-      >
-        <span class="tab-icon">◯</span>
-        Профиль
-      </button>
-
+      <span>RuStore</span>
     </div>
+
+  </header>
+
+  <main id="app"></main>
+
+  <nav class="bottom">
+
+    <button
+      class="tab active"
+      data-tab="home"
+    >
+      ⌂
+      <br>
+      Главная
+    </button>
+
+    <button
+      class="tab"
+      data-tab="favorites"
+    >
+      ♡
+      <br>
+      Избранное
+    </button>
+
+    <button
+      class="tab"
+      data-tab="profile"
+    >
+      ◯
+      <br>
+      Профиль
+    </button>
 
   </nav>
 
-  <script src="app.js"></script>
+  <script src="./app.js?v=16"></script>
 
 </body>
-
 </html>
