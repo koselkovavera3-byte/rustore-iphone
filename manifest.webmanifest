@@ -2,16 +2,16 @@
   "name": "RuStore",
   "short_name": "RuStore",
   "description": "Каталог приложений для российских пользователей.",
-  "start_url": "./",
+  "lang": "ru",
+  "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b0d12",
-  "theme_color": "#0b0d12",
-  "lang": "ru",
+  "background_color": "#f5f5f7",
+  "theme_color": "#ffffff",
   "icons": [
     {
-      "src": "icon.svg",
+      "src": "./icon.svg?v=20260916-5",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
