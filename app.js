@@ -5,14 +5,11 @@ const apps = [
     dev: "RuStore",
     rating: 4.7,
     category: "Магазины",
-    desc: "Официальный российский магазин приложений для Android.",
+    desc: "Официальный каталог приложений.",
     icon: "icon.svg",
-
-    androidUrl: "https://www.rustore.ru/instruction",
-    iosUrl: null,
-    website: "https://www.rustore.ru/"
+    android: "https://www.rustore.ru/",
+    ios: "https://www.rustore.ru/"
   },
-
   {
     id: 2,
     name: "ВКонтакте",
@@ -21,12 +18,9 @@ const apps = [
     category: "Социальные",
     desc: "Общение, музыка, видео и сообщества.",
     icon: "icon.svg",
-
-    androidUrl: "https://www.rustore.ru/catalog/app/com.vkontakte.android",
-    iosUrl: "https://apps.apple.com/ru/app/%D0%B2%D0%BA-%D0%BD%D0%BE%D0%B2%D0%BE%D0%B5-%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5/id564177498",
-    website: "https://vk.com/"
+    android: "https://vk.com/",
+    ios: "https://apps.apple.com/ru/app/vkontakte/id564177498"
   },
-
   {
     id: 3,
     name: "Госуслуги",
@@ -35,12 +29,9 @@ const apps = [
     category: "Государство",
     desc: "Государственные услуги в одном приложении.",
     icon: "icon.svg",
-
-    androidUrl: "https://www.rustore.ru/catalog/app/ru.rostel",
-    iosUrl: "https://apps.apple.com/ru/app/%D0%B3%D0%BE%D1%81%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B8/id1367959794",
-    website: "https://www.gosuslugi.ru/"
+    android: "https://www.gosuslugi.ru/",
+    ios: "https://apps.apple.com/ru/app/госуслуги/id672600744"
   },
-
   {
     id: 4,
     name: "СберБанк",
@@ -49,10 +40,8 @@ const apps = [
     category: "Финансы",
     desc: "Банковские сервисы и платежи.",
     icon: "icon.svg",
-
-    androidUrl: "https://www.rustore.ru/catalog/app/ru.sberbankmobile",
-    iosUrl: "https://www.sberbank.ru/",
-    website: "https://www.sberbank.ru/"
+    android: "https://www.sberbank.ru/",
+    ios: "https://apps.apple.com/ru/app/сбербанк/id492224193"
   }
 ];
 
@@ -63,36 +52,19 @@ const app = document.getElementById("app");
 
 function load(key, fallback) {
   try {
-    const value = localStorage.getItem(key);
-
-    if (!value) {
-      return fallback;
-    }
-
-    return JSON.parse(value);
-
-  } catch (error) {
-    console.error(error);
+    return JSON.parse(localStorage.getItem(key)) ?? fallback;
+  } catch {
     return fallback;
   }
 }
 
 function save() {
-  localStorage.setItem(
-    "favorites",
-    JSON.stringify(favorites)
-  );
-
-  localStorage.setItem(
-    "history",
-    JSON.stringify(history)
-  );
+  localStorage.setItem("favorites", JSON.stringify(favorites));
+  localStorage.setItem("history", JSON.stringify(history));
 }
 
 function getApp(id) {
-  return apps.find(
-    item => item.id === id
-  );
+  return apps.find(item => item.id === id);
 }
 
 function isFavorite(id) {
@@ -101,9 +73,7 @@ function isFavorite(id) {
 
 function toggleFavorite(id) {
   if (isFavorite(id)) {
-    favorites = favorites.filter(
-      item => item !== id
-    );
+    favorites = favorites.filter(item => item !== id);
   } else {
     favorites.push(id);
   }
@@ -115,75 +85,13 @@ function toggleFavorite(id) {
 function addHistory(id) {
   history = [
     id,
-    ...history.filter(
-      item => item !== id
-    )
+    ...history.filter(item => item !== id)
   ].slice(0, 30);
 
   save();
 }
 
-function getDevice() {
-  const ua =
-    navigator.userAgent ||
-    navigator.vendor ||
-    window.opera ||
-    "";
-
-  if (/android/i.test(ua)) {
-    return "android";
-  }
-
-  if (
-    /iPad|iPhone|iPod/.test(ua) ||
-    (
-      navigator.platform === "MacIntel" &&
-      navigator.maxTouchPoints > 1
-    )
-  ) {
-    return "ios";
-  }
-
-  return "other";
-}
-
-function getInstallAction(item) {
-  const device = getDevice();
-
-  if (
-    device === "android" &&
-    item.androidUrl
-  ) {
-    return {
-      text: "Скачать для Android",
-      url: item.androidUrl
-    };
-  }
-
-  if (
-    device === "ios" &&
-    item.iosUrl
-  ) {
-    return {
-      text: "Открыть в App Store",
-      url: item.iosUrl
-    };
-  }
-
-  if (item.website) {
-    return {
-      text: "Открыть официальный сайт",
-      url: item.website
-    };
-  }
-
-  return null;
-}
-
 function renderCard(item) {
-  const action =
-    getInstallAction(item);
-
   return `
     <div class="card">
 
@@ -213,14 +121,9 @@ function renderCard(item) {
 
         <button
           class="heart"
-          type="button"
           onclick="toggleFavorite(${item.id})"
         >
-          ${
-            isFavorite(item.id)
-              ? "♥"
-              : "♡"
-          }
+          ${isFavorite(item.id) ? "♥" : "♡"}
         </button>
 
       </div>
@@ -238,11 +141,7 @@ function renderCard(item) {
 
       <button
         class="secondary"
-        type="button"
-        style="
-          width:100%;
-          margin-top:14px;
-        "
+        style="width:100%;margin-top:14px"
         onclick="openApp(${item.id})"
       >
         Открыть
@@ -253,6 +152,7 @@ function renderCard(item) {
 }
 
 function renderHome() {
+
   app.innerHTML = `
     <input
       id="search"
@@ -261,108 +161,57 @@ function renderHome() {
       autocomplete="off"
     >
 
-    <h1>
-      Приложения
-    </h1>
-
-    <div
-      class="muted"
-      style="margin-bottom:15px"
-    >
-      Российские приложения
-    </div>
+    <h1>Приложения</h1>
 
     <div id="appList"></div>
   `;
 
-  const search =
-    document.getElementById(
-      "search"
-    );
-
-  const list =
-    document.getElementById(
-      "appList"
-    );
+  const search = document.getElementById("search");
+  const list = document.getElementById("appList");
 
   function update() {
-    const query =
-      search.value
-        .trim()
-        .toLowerCase();
 
-    const filtered =
-      apps.filter(item =>
-        (
-          item.name +
-          " " +
-          item.dev +
-          " " +
-          item.desc +
-          " " +
-          item.category
-        )
-          .toLowerCase()
-          .includes(query)
-      );
+    const query = search.value
+      .trim()
+      .toLowerCase();
 
-    list.innerHTML =
-      filtered.length
-        ? filtered
-            .map(renderCard)
-            .join("")
-        : `
-          <div class="empty">
-            Ничего не найдено
-          </div>
-        `;
+    const filtered = apps.filter(item =>
+      (
+        item.name +
+        item.dev +
+        item.desc +
+        item.category
+      )
+        .toLowerCase()
+        .includes(query)
+    );
+
+    list.innerHTML = filtered.length
+      ? filtered.map(renderCard).join("")
+      : `
+        <div class="empty">
+          Ничего не найдено
+        </div>
+      `;
   }
 
-  search.addEventListener(
-    "input",
-    update
-  );
+  search.addEventListener("input", update);
 
   update();
 }
 
 function openApp(id) {
+
   const item = getApp(id);
 
-  if (!item) {
-    return;
-  }
+  if (!item) return;
 
   addHistory(id);
 
-  const action =
-    getInstallAction(item);
-
-  const device =
-    getDevice();
-
-  let deviceText =
-    "Устройство не определено";
-
-  if (device === "android") {
-    deviceText =
-      "Android";
-  }
-
-  if (device === "ios") {
-    deviceText =
-      "iPhone / iPad";
-  }
-
-  if (device === "other") {
-    deviceText =
-      "Компьютер или другое устройство";
-  }
-
   app.innerHTML = `
+
     <button
       class="back"
-      type="button"
       onclick="renderHome()"
     >
       ‹ Назад
@@ -396,78 +245,40 @@ function openApp(id) {
 
         <button
           class="heart"
-          type="button"
-          onclick="
-            toggleFavorite(${item.id});
-            openApp(${item.id});
-          "
+          onclick="toggleFavorite(${item.id})"
         >
-          ${
-            isFavorite(item.id)
-              ? "♥"
-              : "♡"
-          }
+          ${isFavorite(item.id) ? "♥" : "♡"}
         </button>
 
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:15px"
-      >
+      <div class="desc" style="margin-top:15px">
         ${item.desc}
       </div>
 
-      <div
-        class="muted"
-        style="margin-top:12px"
-      >
-        Категория:
-        ${item.category}
+      <div class="muted" style="margin-top:12px">
+        Категория: ${item.category}
       </div>
 
-      <div
-        class="muted"
-        style="
-          margin-top:12px;
-          padding:10px;
-          background:#f3f3f3;
-          border-radius:12px;
-        "
-      >
-        Ваше устройство:
-        <b>${deviceText}</b>
-      </div>
+      <h3 style="margin-top:24px">
+        Скачать приложение
+      </h3>
 
-      ${
-        action
-          ? `
-            <button
-              class="primary"
-              type="button"
-              style="
-                width:100%;
-                margin-top:20px;
-                height:48px;
-              "
-              onclick="
-                openExternal('${action.url}')
-              "
-            >
-              ${action.text}
-            </button>
-          `
-          : `
-            <div
-              class="empty"
-              style="margin-top:20px"
-            >
-              Для этого приложения
-              пока нет ссылки
-              установки.
-            </div>
-          `
-      }
+      <button
+        class="primary"
+        style="width:100%;margin-top:10px;height:48px"
+        onclick="openIOS(${item.id})"
+      >
+         Открыть в App Store
+      </button>
+
+      <button
+        class="secondary"
+        style="width:100%;margin-top:10px;height:48px"
+        onclick="openAndroid(${item.id})"
+      >
+        🤖 Открыть официальный сайт
+      </button>
 
     </div>
 
@@ -481,17 +292,11 @@ function openApp(id) {
         ${item.desc}
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:10px"
-      >
+      <div class="desc" style="margin-top:10px">
         Версия 1.0.0
       </div>
 
-      <div
-        class="desc"
-        style="margin-top:5px"
-      >
+      <div class="desc" style="margin-top:5px">
         Бесплатно
       </div>
 
@@ -503,64 +308,53 @@ function openApp(id) {
 
     <div class="card">
 
-      <b>
-        Пользователь
-      </b>
+      <b>Пользователь</b>
 
       <div style="margin-top:5px">
         ★★★★★
       </div>
 
-      <div
-        class="muted"
-        style="margin-top:5px"
-      >
+      <div class="muted" style="margin-top:5px">
         Отличное приложение.
-      </div>
-
-    </div>
-
-    <div class="card">
-
-      <b>
-        Пользователь
-      </b>
-
-      <div style="margin-top:5px">
-        ★★★★☆
-      </div>
-
-      <div
-        class="muted"
-        style="margin-top:5px"
-      >
-        Работает хорошо.
       </div>
 
     </div>
   `;
 }
 
-function openExternal(url) {
-  window.location.href = url;
+function openIOS(id) {
+
+  const item = getApp(id);
+
+  if (!item || !item.ios) return;
+
+  window.location.href = item.ios;
+}
+
+function openAndroid(id) {
+
+  const item = getApp(id);
+
+  if (!item || !item.android) return;
+
+  window.location.href = item.android;
 }
 
 function renderFavorites() {
-  const list =
-    apps.filter(
-      item => isFavorite(item.id)
-    );
+
+  const list = apps.filter(
+    item => isFavorite(item.id)
+  );
 
   app.innerHTML = `
+
     <h1>
       Избранное
     </h1>
 
     ${
       list.length
-        ? list
-            .map(renderCard)
-            .join("")
+        ? list.map(renderCard).join("")
         : `
           <div class="empty">
             Нет избранных приложений.
@@ -574,12 +368,13 @@ function renderFavorites() {
 }
 
 function renderProfile() {
-  const historyApps =
-    history
-      .map(id => getApp(id))
-      .filter(Boolean);
+
+  const historyApps = history
+    .map(id => getApp(id))
+    .filter(Boolean);
 
   app.innerHTML = `
+
     <h1>
       Профиль
     </h1>
@@ -641,26 +436,16 @@ function renderProfile() {
             История
           </h2>
 
-          ${historyApps
-            .map(renderCard)
-            .join("")}
+          ${historyApps.map(renderCard).join("")}
         `
-        : `
-          <div class="empty">
-            История пока пуста.
-          </div>
-        `
+        : ""
     }
 
     <button
       class="secondary"
-      type="button"
-      style="
-        width:100%;
-        margin-top:10px;
-      "
+      style="width:100%;margin-top:10px"
       onclick="
-        history = [];
+        history=[];
         save();
         renderProfile();
       "
@@ -671,76 +456,59 @@ function renderProfile() {
 }
 
 function renderCurrent() {
-  const active =
-    document.querySelector(
-      ".tab.active"
-    );
 
-  const tab =
-    active
-      ? active.dataset.tab
-      : "home";
+  const active = document.querySelector(".tab.active");
+
+  const tab = active
+    ? active.dataset.tab
+    : "home";
 
   if (tab === "home") {
     renderHome();
-    return;
   }
 
   if (tab === "favorites") {
     renderFavorites();
-    return;
   }
 
   if (tab === "profile") {
     renderProfile();
-    return;
   }
-
-  renderHome();
 }
 
 document
   .querySelectorAll(".tab")
   .forEach(button => {
-    button.addEventListener(
-      "click",
-      () => {
 
-        document
-          .querySelectorAll(".tab")
-          .forEach(item => {
-            item.classList.remove(
-              "active"
-            );
-          });
+    button.addEventListener("click", () => {
 
-        button.classList.add(
-          "active"
+      document
+        .querySelectorAll(".tab")
+        .forEach(item =>
+          item.classList.remove("active")
         );
 
-        renderCurrent();
-      }
-    );
+      button.classList.add("active");
+
+      renderCurrent();
+    });
+
   });
 
-if (
-  "serviceWorker" in navigator
-) {
-  window.addEventListener(
-    "load",
-    () => {
+if ("serviceWorker" in navigator) {
 
-      navigator.serviceWorker
-        .register("sW.js")
-        .catch(error => {
-          console.error(
-            "Service Worker error:",
-            error
-          );
-        });
+  window.addEventListener("load", () => {
 
-    }
-  );
+    navigator.serviceWorker
+      .register("./sW.js")
+      .catch(error => {
+        console.error(
+          "Service Worker error:",
+          error
+        );
+      });
+
+  });
 }
 
 renderHome();
