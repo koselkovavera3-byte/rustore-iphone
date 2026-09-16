@@ -1,4 +1,4 @@
-const CACHE_NAME = "rustore-v6-20260916";
+const CACHE_NAME = "ios-app-hub-v1-20260916";
 
 const APP_SHELL = [
   "./",
@@ -14,7 +14,7 @@ self.addEventListener("install", event => {
       .then(cache => cache.addAll(APP_SHELL))
       .catch(error => {
         console.error(
-          "RuStore cache install error:",
+          "iOS App Hub cache install error:",
           error
         );
       })
@@ -23,38 +23,19 @@ self.addEventListener("install", event => {
   self.skipWaiting();
 });
 
-
 self.addEventListener("activate", event => {
-
   event.waitUntil(
-
     caches.keys()
-      .then(keys => {
-
-        return Promise.all(
-
-          keys
-            .filter(key =>
-              key !== CACHE_NAME
-            )
-            .map(key =>
-              caches.delete(key)
-            )
-
-        );
-
-      })
-      .then(() =>
-        self.clients.claim()
-      )
-
+      .then(keys => Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
   );
-
 });
 
-
 self.addEventListener("fetch", event => {
-
   const request = event.request;
 
   if (request.method !== "GET") {
@@ -62,7 +43,6 @@ self.addEventListener("fetch", event => {
   }
 
   event.respondWith(
-
     fetch(request)
       .then(response => {
 
@@ -70,40 +50,23 @@ self.addEventListener("fetch", event => {
           response &&
           response.status === 200
         ) {
-
-          const copy =
-            response.clone();
+          const copy = response.clone();
 
           caches.open(CACHE_NAME)
             .then(cache => {
-
-              cache.put(
-                request,
-                copy
-              );
-
+              cache.put(request, copy);
             })
             .catch(() => {});
-
         }
 
         return response;
-
       })
-      .catch(() => {
-
-        return caches.match(request)
-          .then(cached => {
-
-            return cached ||
-              caches.match(
-                "./index.html"
-              );
-
-          });
-
-      })
-
+      .catch(() =>
+        caches.match(request)
+          .then(cached =>
+            cached ||
+            caches.match("./index.html")
+          )
+      )
   );
-
 });
