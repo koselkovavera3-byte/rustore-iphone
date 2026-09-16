@@ -5,10 +5,14 @@ const apps = [
     dev: "RuStore",
     rating: 4.7,
     category: "Магазины",
-    desc: "Каталог приложений для российских пользователей.",
+    desc: "Официальный российский магазин приложений для Android.",
     icon: "icon.svg",
-    url: "https://www.rustore.ru/"
+
+    androidUrl: "https://www.rustore.ru/instruction",
+    iosUrl: null,
+    website: "https://www.rustore.ru/"
   },
+
   {
     id: 2,
     name: "ВКонтакте",
@@ -17,8 +21,12 @@ const apps = [
     category: "Социальные",
     desc: "Общение, музыка, видео и сообщества.",
     icon: "icon.svg",
-    url: "https://vk.com/"
+
+    androidUrl: "https://www.rustore.ru/catalog/app/com.vkontakte.android",
+    iosUrl: "https://apps.apple.com/ru/app/%D0%B2%D0%BA-%D0%BD%D0%BE%D0%B2%D0%BE%D0%B5-%D0%BD%D0%B0%D0%B7%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5/id564177498",
+    website: "https://vk.com/"
   },
+
   {
     id: 3,
     name: "Госуслуги",
@@ -27,8 +35,12 @@ const apps = [
     category: "Государство",
     desc: "Государственные услуги в одном приложении.",
     icon: "icon.svg",
-    url: "https://www.gosuslugi.ru/"
+
+    androidUrl: "https://www.rustore.ru/catalog/app/ru.rostel",
+    iosUrl: "https://apps.apple.com/ru/app/%D0%B3%D0%BE%D1%81%D1%83%D1%81%D0%BB%D1%83%D0%B3%D0%B8/id1367959794",
+    website: "https://www.gosuslugi.ru/"
   },
+
   {
     id: 4,
     name: "СберБанк",
@@ -37,7 +49,10 @@ const apps = [
     category: "Финансы",
     desc: "Банковские сервисы и платежи.",
     icon: "icon.svg",
-    url: "https://www.sberbank.ru/"
+
+    androidUrl: "https://www.rustore.ru/catalog/app/ru.sberbankmobile",
+    iosUrl: "https://www.sberbank.ru/",
+    website: "https://www.sberbank.ru/"
   }
 ];
 
@@ -55,8 +70,9 @@ function load(key, fallback) {
     }
 
     return JSON.parse(value);
+
   } catch (error) {
-    console.error("Load error:", error);
+    console.error(error);
     return fallback;
   }
 }
@@ -74,7 +90,9 @@ function save() {
 }
 
 function getApp(id) {
-  return apps.find(item => item.id === id);
+  return apps.find(
+    item => item.id === id
+  );
 }
 
 function isFavorite(id) {
@@ -105,7 +123,67 @@ function addHistory(id) {
   save();
 }
 
+function getDevice() {
+  const ua =
+    navigator.userAgent ||
+    navigator.vendor ||
+    window.opera ||
+    "";
+
+  if (/android/i.test(ua)) {
+    return "android";
+  }
+
+  if (
+    /iPad|iPhone|iPod/.test(ua) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    )
+  ) {
+    return "ios";
+  }
+
+  return "other";
+}
+
+function getInstallAction(item) {
+  const device = getDevice();
+
+  if (
+    device === "android" &&
+    item.androidUrl
+  ) {
+    return {
+      text: "Скачать для Android",
+      url: item.androidUrl
+    };
+  }
+
+  if (
+    device === "ios" &&
+    item.iosUrl
+  ) {
+    return {
+      text: "Открыть в App Store",
+      url: item.iosUrl
+    };
+  }
+
+  if (item.website) {
+    return {
+      text: "Открыть официальный сайт",
+      url: item.website
+    };
+  }
+
+  return null;
+}
+
 function renderCard(item) {
+  const action =
+    getInstallAction(item);
+
   return `
     <div class="card">
 
@@ -138,7 +216,11 @@ function renderCard(item) {
           type="button"
           onclick="toggleFavorite(${item.id})"
         >
-          ${isFavorite(item.id) ? "♥" : "♡"}
+          ${
+            isFavorite(item.id)
+              ? "♥"
+              : "♡"
+          }
         </button>
 
       </div>
@@ -187,17 +269,21 @@ function renderHome() {
       class="muted"
       style="margin-bottom:15px"
     >
-      Каталог приложений
+      Российские приложения
     </div>
 
     <div id="appList"></div>
   `;
 
   const search =
-    document.getElementById("search");
+    document.getElementById(
+      "search"
+    );
 
   const list =
-    document.getElementById("appList");
+    document.getElementById(
+      "appList"
+    );
 
   function update() {
     const query =
@@ -249,6 +335,30 @@ function openApp(id) {
 
   addHistory(id);
 
+  const action =
+    getInstallAction(item);
+
+  const device =
+    getDevice();
+
+  let deviceText =
+    "Устройство не определено";
+
+  if (device === "android") {
+    deviceText =
+      "Android";
+  }
+
+  if (device === "ios") {
+    deviceText =
+      "iPhone / iPad";
+  }
+
+  if (device === "other") {
+    deviceText =
+      "Компьютер или другое устройство";
+  }
+
   app.innerHTML = `
     <button
       class="back"
@@ -292,7 +402,11 @@ function openApp(id) {
             openApp(${item.id});
           "
         >
-          ${isFavorite(item.id) ? "♥" : "♡"}
+          ${
+            isFavorite(item.id)
+              ? "♥"
+              : "♡"
+          }
         </button>
 
       </div>
@@ -308,21 +422,52 @@ function openApp(id) {
         class="muted"
         style="margin-top:12px"
       >
-        Категория: ${item.category}
+        Категория:
+        ${item.category}
       </div>
 
-      <button
-        class="primary"
-        type="button"
+      <div
+        class="muted"
         style="
-          width:100%;
-          margin-top:20px;
-          height:48px;
+          margin-top:12px;
+          padding:10px;
+          background:#f3f3f3;
+          border-radius:12px;
         "
-        onclick="openExternal('${item.url}')"
       >
-        Перейти на сайт
-      </button>
+        Ваше устройство:
+        <b>${deviceText}</b>
+      </div>
+
+      ${
+        action
+          ? `
+            <button
+              class="primary"
+              type="button"
+              style="
+                width:100%;
+                margin-top:20px;
+                height:48px;
+              "
+              onclick="
+                openExternal('${action.url}')
+              "
+            >
+              ${action.text}
+            </button>
+          `
+          : `
+            <div
+              class="empty"
+              style="margin-top:20px"
+            >
+              Для этого приложения
+              пока нет ссылки
+              установки.
+            </div>
+          `
+      }
 
     </div>
 
@@ -397,11 +542,7 @@ function openApp(id) {
 }
 
 function openExternal(url) {
-  window.open(
-    url,
-    "_blank",
-    "noopener,noreferrer"
-  );
+  window.location.href = url;
 }
 
 function renderFavorites() {
@@ -588,6 +729,7 @@ if (
   window.addEventListener(
     "load",
     () => {
+
       navigator.serviceWorker
         .register("sW.js")
         .catch(error => {
@@ -596,6 +738,7 @@ if (
             error
           );
         });
+
     }
   );
 }
