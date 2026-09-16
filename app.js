@@ -10,7 +10,6 @@ const apps = [
     type: "external",
     url: "https://www.rustore.ru/"
   },
-
   {
     id: 2,
     name: "ВКонтакте",
@@ -22,7 +21,6 @@ const apps = [
     type: "vk",
     url: "https://vk.com/"
   },
-
   {
     id: 3,
     name: "Госуслуги",
@@ -34,7 +32,6 @@ const apps = [
     type: "external",
     url: "https://www.gosuslugi.ru/"
   },
-
   {
     id: 4,
     name: "СберБанк",
@@ -62,14 +59,12 @@ function load(key, fallback) {
     );
 
     return value ?? fallback;
-
   } catch {
     return fallback;
   }
 }
 
 function save() {
-
   localStorage.setItem(
     "favorites",
     JSON.stringify(favorites)
@@ -82,74 +77,61 @@ function save() {
 }
 
 function getApp(id) {
-
   return apps.find(
     item => item.id === id
   );
 }
 
 function isFavorite(id) {
-
   return favorites.includes(id);
 }
 
 function isIOS() {
-
   return /iPhone|iPad|iPod/i.test(
     navigator.userAgent
   );
 }
 
 function isAndroid() {
-
   return /Android/i.test(
     navigator.userAgent
   );
 }
 
 function isStandalone() {
-
   return (
-    window.matchMedia &&
-    window.matchMedia(
-      "(display-mode: standalone)"
-    ).matches
-  ) ||
-  window.navigator.standalone === true;
+    window.navigator.standalone === true ||
+    (
+      window.matchMedia &&
+      window.matchMedia(
+        "(display-mode: standalone)"
+      ).matches
+    )
+  );
 }
 
 window.addEventListener(
   "beforeinstallprompt",
   event => {
-
     event.preventDefault();
-
     deferredInstallPrompt = event;
-
   }
 );
 
 function toggleFavorite(id) {
-
   if (isFavorite(id)) {
-
-    favorites =
-      favorites.filter(
-        item => item !== id
-      );
-
+    favorites = favorites.filter(
+      item => item !== id
+    );
   } else {
-
     favorites.push(id);
   }
 
   save();
-
   renderCurrent();
 }
 
 function addHistory(id) {
-
   history = [
     id,
     ...history.filter(
@@ -161,9 +143,7 @@ function addHistory(id) {
 }
 
 function renderCard(item) {
-
   return `
-
     <div class="card">
 
       <div class="row">
@@ -193,7 +173,6 @@ function renderCard(item) {
         <button
           class="heart"
           onclick="toggleFavorite(${item.id})"
-          aria-label="Избранное"
         >
           ${
             isFavorite(item.id)
@@ -233,7 +212,6 @@ function renderCard(item) {
 function renderHome() {
 
   app.innerHTML = `
-
     <input
       id="search"
       class="search"
@@ -249,14 +227,10 @@ function renderHome() {
   `;
 
   const search =
-    document.getElementById(
-      "search"
-    );
+    document.getElementById("search");
 
   const list =
-    document.getElementById(
-      "appList"
-    );
+    document.getElementById("appList");
 
   function update() {
 
@@ -265,23 +239,20 @@ function renderHome() {
         .trim()
         .toLowerCase();
 
-    const filtered =
-      apps.filter(item =>
-        (
-          item.name +
-          item.dev +
-          item.desc +
-          item.category
-        )
-          .toLowerCase()
-          .includes(query)
-      );
+    const filtered = apps.filter(item =>
+      (
+        item.name +
+        item.dev +
+        item.desc +
+        item.category
+      )
+        .toLowerCase()
+        .includes(query)
+    );
 
     list.innerHTML =
       filtered.length
-        ? filtered
-            .map(renderCard)
-            .join("")
+        ? filtered.map(renderCard).join("")
         : `
           <div class="empty">
             Ничего не найдено
@@ -306,7 +277,6 @@ function openApp(id) {
   addHistory(id);
 
   app.innerHTML = `
-
     <button
       class="back"
       onclick="renderHome()"
@@ -356,7 +326,10 @@ function openApp(id) {
 
       </div>
 
-      <div class="desc">
+      <div
+        class="desc"
+        style="margin-top:15px"
+      >
         ${item.desc}
       </div>
 
@@ -364,14 +337,25 @@ function openApp(id) {
         class="muted"
         style="margin-top:12px"
       >
-        Категория:
-        ${item.category}
+        Категория: ${item.category}
       </div>
 
       ${
         item.type === "vk"
-          ? renderVKActions()
-          : renderExternalAction(item)
+          ? renderVKButtons()
+          : `
+            <button
+              class="primary"
+              style="
+                width:100%;
+                height:48px;
+                margin-top:20px;
+              "
+              onclick="openExternal('${item.url}')"
+            >
+              Открыть официальный сайт
+            </button>
+          `
       }
 
     </div>
@@ -424,45 +408,59 @@ function openApp(id) {
       </div>
 
     </div>
-
   `;
 }
 
-function renderExternalAction(item) {
-
-  return `
-
-    <button
-      class="primary"
-      style="
-        width:100%;
-        margin-top:20px;
-        height:48px;
-      "
-      onclick="
-        openExternal('${item.url}')
-      "
-    >
-      Открыть сайт
-    </button>
-
-  `;
-}
-
-function renderVKActions() {
+function renderVKButtons() {
 
   if (isIOS()) {
 
-    return `
+    if (isStandalone()) {
+      return `
+        <div
+          class="card"
+          style="
+            margin-top:20px;
+            text-align:center;
+          "
+        >
+          <div style="font-size:40px">
+            ✓
+          </div>
 
+          <h3>
+            VK добавлен на экран
+          </h3>
+
+          <p class="muted">
+            Приложение открыто как
+            веб-приложение.
+          </p>
+
+          <button
+            class="secondary"
+            style="
+              width:100%;
+              height:48px;
+            "
+            onclick="openVK()"
+          >
+            Открыть VK
+          </button>
+        </div>
+      `;
+    }
+
+    return `
       <button
         class="primary"
         style="
           width:100%;
+          height:52px;
           margin-top:20px;
-          height:48px;
+          font-size:16px;
         "
-        onclick="showIOSVKInstall()"
+        onclick="showIOSInstall()"
       >
         📱 Установить VK на iPhone
       </button>
@@ -471,29 +469,28 @@ function renderVKActions() {
         class="secondary"
         style="
           width:100%;
-          margin-top:10px;
           height:48px;
+          margin-top:10px;
         "
         onclick="openVK()"
       >
         Открыть VK
       </button>
-
     `;
   }
 
   if (isAndroid()) {
 
     return `
-
       <button
         class="primary"
         style="
           width:100%;
+          height:52px;
           margin-top:20px;
-          height:48px;
+          font-size:16px;
         "
-        onclick="installAndroidVK()"
+        onclick="installAndroid()"
       >
         📱 Установить VK
       </button>
@@ -502,44 +499,34 @@ function renderVKActions() {
         class="secondary"
         style="
           width:100%;
-          margin-top:10px;
           height:48px;
+          margin-top:10px;
         "
         onclick="openVK()"
       >
         Открыть VK
       </button>
-
     `;
   }
 
   return `
-
     <button
       class="primary"
       style="
         width:100%;
-        margin-top:20px;
         height:48px;
+        margin-top:20px;
       "
       onclick="openVK()"
     >
       Открыть VK
     </button>
-
   `;
 }
 
-function openVK() {
-
-  window.location.href =
-    "https://vk.com/";
-}
-
-function showIOSVKInstall() {
+function showIOSInstall() {
 
   app.innerHTML = `
-
     <button
       class="back"
       onclick="openApp(2)"
@@ -556,28 +543,20 @@ function showIOSVKInstall() {
       <div
         style="
           text-align:center;
-          font-size:54px;
-          margin-bottom:15px;
+          font-size:56px;
         "
       >
         📱
       </div>
 
-      <h2 style="margin-top:0">
+      <h2>
         VK на iPhone
       </h2>
 
       <p class="desc">
-        Официальное приложение VK
-        сейчас недоступно для новой
-        установки из App Store.
-      </p>
-
-      <p class="desc">
-        На iPhone можно добавить
-        официальный сайт VK
-        на экран «Домой» как
-        веб-приложение.
+        Сейчас установим VK как
+        веб-приложение на экран
+        «Домой» iPhone.
       </p>
 
     </div>
@@ -585,12 +564,8 @@ function showIOSVKInstall() {
     <div class="card">
 
       <h3>
-        Шаг 1
+        1. Открой VK
       </h3>
-
-      <p class="desc">
-        Нажми кнопку ниже.
-      </p>
 
       <button
         class="primary"
@@ -608,12 +583,13 @@ function showIOSVKInstall() {
     <div class="card">
 
       <h3>
-        Шаг 2
+        2. Нажми «Поделиться»
       </h3>
 
       <p class="desc">
         В Safari нажми кнопку
-        «Поделиться».
+        <b>Поделиться</b>
+        в нижней панели.
       </p>
 
     </div>
@@ -621,11 +597,11 @@ function showIOSVKInstall() {
     <div class="card">
 
       <h3>
-        Шаг 3
+        3. Выбери «На экран Домой»
       </h3>
 
       <p class="desc">
-        Выбери
+        Прокрути меню и выбери
         <b>«На экран Домой»</b>.
       </p>
 
@@ -634,13 +610,13 @@ function showIOSVKInstall() {
     <div class="card">
 
       <h3>
-        Шаг 4
+        4. Нажми «Добавить»
       </h3>
 
       <p class="desc">
-        Включи
+        Если появится пункт
         <b>«Открыть как веб-приложение»</b>,
-        если такой пункт доступен.
+        оставь его включённым.
       </p>
 
     </div>
@@ -648,16 +624,11 @@ function showIOSVKInstall() {
     <div class="card">
 
       <h3>
-        Шаг 5
+        5. Готово
       </h3>
 
       <p class="desc">
-        Нажми
-        <b>«Добавить»</b>.
-      </p>
-
-      <p class="muted">
-        После этого иконка VK появится
+        Иконка VK появится
         на экране iPhone.
       </p>
 
@@ -674,36 +645,39 @@ function showIOSVKInstall() {
     >
       Вернуться к VK
     </button>
-
   `;
 }
 
-async function installAndroidVK() {
+function openVK() {
+  window.location.href =
+    "https://vk.com/";
+}
 
-  if (deferredInstallPrompt) {
+async function installAndroid() {
 
-    try {
-
-      await deferredInstallPrompt.prompt();
-
-      await deferredInstallPrompt.userChoice;
-
-      deferredInstallPrompt = null;
-
-      return;
-
-    } catch (error) {
-
-      console.error(error);
-
-    }
+  if (!deferredInstallPrompt) {
+    openVK();
+    return;
   }
 
-  openVK();
+  try {
+
+    await deferredInstallPrompt.prompt();
+
+    await deferredInstallPrompt.userChoice;
+
+    deferredInstallPrompt = null;
+
+  } catch (error) {
+
+    console.error(
+      "Install error:",
+      error
+    );
+  }
 }
 
 function openExternal(url) {
-
   window.location.href = url;
 }
 
@@ -715,16 +689,13 @@ function renderFavorites() {
     );
 
   app.innerHTML = `
-
     <h1>
       Избранное
     </h1>
 
     ${
       list.length
-        ? list
-            .map(renderCard)
-            .join("")
+        ? list.map(renderCard).join("")
         : `
           <div class="empty">
             Нет избранных приложений.
@@ -734,7 +705,6 @@ function renderFavorites() {
           </div>
         `
     }
-
   `;
 }
 
@@ -746,7 +716,6 @@ function renderProfile() {
       .filter(Boolean);
 
   app.innerHTML = `
-
     <h1>
       Профиль
     </h1>
@@ -829,7 +798,6 @@ function renderProfile() {
     >
       Очистить историю
     </button>
-
   `;
 }
 
@@ -869,14 +837,10 @@ document
         document
           .querySelectorAll(".tab")
           .forEach(item =>
-            item.classList.remove(
-              "active"
-            )
+            item.classList.remove("active")
           );
 
-        button.classList.add(
-          "active"
-        );
+        button.classList.add("active");
 
         renderCurrent();
       }
@@ -903,7 +867,6 @@ if ("serviceWorker" in navigator) {
 
     }
   );
-
 }
 
 renderHome();
