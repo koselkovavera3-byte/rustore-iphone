@@ -6,7 +6,8 @@ const apps = [
     rating: 4.7,
     category: "Магазины",
     desc: "Каталог приложений для российских пользователей.",
-    icon: "icon.svg"
+    icon: "icon.svg",
+    url: "https://www.rustore.ru/"
   },
   {
     id: 2,
@@ -15,7 +16,8 @@ const apps = [
     rating: 4.6,
     category: "Социальные",
     desc: "Общение, музыка, видео и сообщества.",
-    icon: "icon.svg"
+    icon: "icon.svg",
+    url: "https://vk.com/"
   },
   {
     id: 3,
@@ -24,7 +26,8 @@ const apps = [
     rating: 4.8,
     category: "Государство",
     desc: "Государственные услуги в одном приложении.",
-    icon: "icon.svg"
+    icon: "icon.svg",
+    url: "https://www.gosuslugi.ru/"
   },
   {
     id: 4,
@@ -33,29 +36,31 @@ const apps = [
     rating: 4.9,
     category: "Финансы",
     desc: "Банковские сервисы и платежи.",
-    icon: "icon.svg"
+    icon: "icon.svg",
+    url: "https://www.sberbank.ru/"
   }
 ];
 
 let favorites = load("favorites", []);
 let history = load("history", []);
-let installed = load("installed", []);
-
-let deferredPrompt = null;
 
 const app = document.getElementById("app");
 
 function load(key, fallback) {
   try {
-    return JSON.parse(
+    const value = JSON.parse(
       localStorage.getItem(key)
-    ) || fallback;
+    );
+
+    return value ?? fallback;
+
   } catch {
     return fallback;
   }
 }
 
 function save() {
+
   localStorage.setItem(
     "favorites",
     JSON.stringify(favorites)
@@ -65,170 +70,7 @@ function save() {
     "history",
     JSON.stringify(history)
   );
-
-  localStorage.setItem(
-    "installed",
-    JSON.stringify(installed)
-  );
 }
-
-/* -------------------------
-   PWA INSTALL
-------------------------- */
-
-window.addEventListener(
-  "beforeinstallprompt",
-  event => {
-
-    event.preventDefault();
-
-    deferredPrompt = event;
-
-    showInstallBanner();
-  }
-);
-
-window.addEventListener(
-  "appinstalled",
-  () => {
-
-    deferredPrompt = null;
-
-    const banner =
-      document.getElementById(
-        "installBanner"
-      );
-
-    if (banner) {
-      banner.remove();
-    }
-  }
-);
-
-function showInstallBanner() {
-
-  if (
-    document.getElementById(
-      "installBanner"
-    )
-  ) {
-    return;
-  }
-
-  const banner =
-    document.createElement("div");
-
-  banner.id = "installBanner";
-
-  banner.style.cssText = `
-    position:fixed;
-    left:12px;
-    right:12px;
-    bottom:88px;
-    z-index:999;
-    background:#151b2b;
-    border:1px solid rgba(255,255,255,.1);
-    border-radius:18px;
-    padding:14px;
-    box-shadow:0 15px 40px rgba(0,0,0,.4);
-  `;
-
-  banner.innerHTML = `
-
-    <div
-      style="
-        display:flex;
-        align-items:center;
-        gap:12px;
-      "
-    >
-
-      <img
-        src="icon.svg"
-        style="
-          width:48px;
-          height:48px;
-          border-radius:13px;
-        "
-      >
-
-      <div style="flex:1">
-
-        <div
-          style="
-            font-weight:700;
-            font-size:15px;
-          "
-        >
-          Установить RuStore
-        </div>
-
-        <div
-          style="
-            color:#8b8f99;
-            font-size:12px;
-            margin-top:3px;
-          "
-        >
-          Добавить приложение
-          на устройство
-        </div>
-
-      </div>
-
-      <button
-        id="installButton"
-        class="primary"
-        style="
-          min-height:40px;
-          padding:0 12px;
-        "
-      >
-        Установить
-      </button>
-
-    </div>
-  `;
-
-  document.body.appendChild(
-    banner
-  );
-
-  document
-    .getElementById("installButton")
-    .onclick = installPWA;
-}
-
-async function installPWA() {
-
-  if (!deferredPrompt) {
-
-    alert(
-      "На iPhone используйте меню «Поделиться» → «На экран Домой»."
-    );
-
-    return;
-  }
-
-  deferredPrompt.prompt();
-
-  await deferredPrompt.userChoice;
-
-  deferredPrompt = null;
-
-  const banner =
-    document.getElementById(
-      "installBanner"
-    );
-
-  if (banner) {
-    banner.remove();
-  }
-}
-
-/* -------------------------
-   HELPERS
-------------------------- */
 
 function getApp(id) {
 
@@ -240,11 +82,6 @@ function getApp(id) {
 function isFavorite(id) {
 
   return favorites.includes(id);
-}
-
-function isInstalled(id) {
-
-  return installed.includes(id);
 }
 
 function toggleFavorite(id) {
@@ -276,75 +113,6 @@ function addHistory(id) {
   ].slice(0, 30);
 
   save();
-}
-
-/* -------------------------
-   HOME
-------------------------- */
-
-function renderHome() {
-
-  app.innerHTML = `
-
-    <input
-      id="search"
-      class="search"
-      placeholder="Поиск приложений"
-      autocomplete="off"
-    >
-
-    <h1>
-      Приложения
-    </h1>
-
-    <div id="appList"></div>
-  `;
-
-  const search =
-    document.getElementById(
-      "search"
-    );
-
-  function update() {
-
-    const query =
-      search.value
-        .trim()
-        .toLowerCase();
-
-    const filtered =
-      apps.filter(item =>
-        (
-          item.name +
-          item.dev +
-          item.desc +
-          item.category
-        )
-          .toLowerCase()
-          .includes(query)
-      );
-
-    const list =
-      document.getElementById(
-        "appList"
-      );
-
-    list.innerHTML =
-      filtered.length
-        ? filtered.map(renderCard).join("")
-        : `
-          <div class="empty">
-            Ничего не найдено
-          </div>
-        `;
-  }
-
-  search.addEventListener(
-    "input",
-    update
-  );
-
-  update();
 }
 
 function renderCard(item) {
@@ -410,25 +178,84 @@ function renderCard(item) {
           margin-top:14px;
         "
         onclick="
-          renderApp(${item.id})
+          openApp(${item.id})
         "
       >
-        ${
-          isInstalled(item.id)
-            ? "Открыть"
-            : "Подробнее"
-        }
+        Открыть
       </button>
 
     </div>
   `;
 }
 
-/* -------------------------
-   APP PAGE
-------------------------- */
+function renderHome() {
 
-function renderApp(id) {
+  app.innerHTML = `
+
+    <input
+      id="search"
+      class="search"
+      placeholder="Поиск приложений"
+      autocomplete="off"
+    >
+
+    <h1>
+      Приложения
+    </h1>
+
+    <div id="appList"></div>
+  `;
+
+  const search =
+    document.getElementById(
+      "search"
+    );
+
+  const list =
+    document.getElementById(
+      "appList"
+    );
+
+  function update() {
+
+    const query =
+      search.value
+        .trim()
+        .toLowerCase();
+
+    const filtered =
+      apps.filter(item =>
+        (
+          item.name +
+          item.dev +
+          item.desc +
+          item.category
+        )
+          .toLowerCase()
+          .includes(query)
+      );
+
+    list.innerHTML =
+      filtered.length
+        ? filtered.map(
+            renderCard
+          ).join("")
+        : `
+          <div class="empty">
+            Ничего не найдено
+          </div>
+        `;
+  }
+
+  search.addEventListener(
+    "input",
+    update
+  );
+
+  update();
+}
+
+function openApp(id) {
 
   const item = getApp(id);
 
@@ -474,7 +301,8 @@ function renderApp(id) {
         <button
           class="heart"
           onclick="
-            toggleFavorite(${item.id})
+            toggleFavorite(${item.id});
+            openApp(${item.id});
           "
         >
           ${
@@ -506,35 +334,11 @@ function renderApp(id) {
           height:48px;
         "
         onclick="
-          ${
-            isInstalled(item.id)
-              ? `launchApp(${item.id})`
-              : `installApp(${item.id})`
-          }
+          openExternal('${item.url}')
         "
       >
-        ${
-          isInstalled(item.id)
-            ? "Открыть"
-            : "Установить"
-        }
+        Открыть приложение
       </button>
-
-      ${
-        isInstalled(item.id)
-          ? `
-            <div
-              class="success"
-              style="
-                text-align:center;
-                margin-top:12px;
-              "
-            >
-              ✓ Установлено
-            </div>
-          `
-          : ""
-      }
 
     </div>
 
@@ -574,12 +378,7 @@ function renderApp(id) {
         Пользователь
       </b>
 
-      <div
-        style="
-          color:#d4af37;
-          margin-top:5px;
-        "
-      >
+      <div style="margin-top:5px">
         ★★★★★
       </div>
 
@@ -595,161 +394,10 @@ function renderApp(id) {
   `;
 }
 
-/* -------------------------
-   DEMO INSTALL
-------------------------- */
+function openExternal(url) {
 
-function installApp(id) {
-
-  const item = getApp(id);
-
-  if (!item) return;
-
-  let progress = 0;
-
-  app.innerHTML = `
-
-    <div
-      class="card install-card"
-      style="margin-top:40px"
-    >
-
-      <img
-        class="large-icon"
-        src="${item.icon}"
-      >
-
-      <h1>
-        ${item.name}
-      </h1>
-
-      <p
-        id="installStatus"
-        class="muted"
-        style="margin-top:10px"
-      >
-        Установка…
-      </p>
-
-      <div class="progress">
-
-        <div
-          id="progressBar"
-          class="progress-bar"
-        ></div>
-
-      </div>
-
-      <div id="progressValue">
-        0%
-      </div>
-
-    </div>
-  `;
-
-  const timer =
-    setInterval(() => {
-
-      progress += 10;
-
-      const bar =
-        document.getElementById(
-          "progressBar"
-        );
-
-      const value =
-        document.getElementById(
-          "progressValue"
-        );
-
-      if (bar) {
-        bar.style.width =
-          progress + "%";
-      }
-
-      if (value) {
-        value.textContent =
-          progress + "%";
-      }
-
-      if (progress >= 100) {
-
-        clearInterval(timer);
-
-        if (
-          !installed.includes(id)
-        ) {
-          installed.push(id);
-        }
-
-        save();
-
-        document.getElementById(
-          "installStatus"
-        ).innerHTML =
-          '<span class="success">✓ Установлено</span>';
-
-        setTimeout(() => {
-          renderApp(id);
-        }, 700);
-      }
-
-    }, 150);
+  window.location.href = url;
 }
-
-/* -------------------------
-   LAUNCH
-------------------------- */
-
-function launchApp(id) {
-
-  const item = getApp(id);
-
-  if (!item) return;
-
-  app.innerHTML = `
-
-    <div
-      class="card install-card"
-      style="margin-top:40px"
-    >
-
-      <img
-        class="large-icon"
-        src="${item.icon}"
-      >
-
-      <h1>
-        ${item.name}
-      </h1>
-
-      <div
-        class="success"
-        style="margin-top:12px"
-      >
-        ✓ Приложение запущено
-      </div>
-
-      <button
-        class="secondary"
-        style="
-          width:100%;
-          margin-top:25px;
-        "
-        onclick="
-          renderApp(${item.id})
-        "
-      >
-        Вернуться
-      </button>
-
-    </div>
-  `;
-}
-
-/* -------------------------
-   FAVORITES
-------------------------- */
 
 function renderFavorites() {
 
@@ -766,9 +414,9 @@ function renderFavorites() {
 
     ${
       list.length
-        ? list
-            .map(renderCard)
-            .join("")
+        ? list.map(
+            renderCard
+          ).join("")
         : `
           <div class="empty">
             Нет избранных приложений.
@@ -780,10 +428,6 @@ function renderFavorites() {
     }
   `;
 }
-
-/* -------------------------
-   PROFILE
-------------------------- */
 
 function renderProfile() {
 
@@ -812,7 +456,7 @@ function renderProfile() {
             align-items:center;
             justify-content:center;
             font-size:26px;
-            color:#d4af37;
+            color:#fff;
           "
         >
           V
@@ -839,11 +483,6 @@ function renderProfile() {
       <div>
         Избранное:
         <b>${favorites.length}</b>
-      </div>
-
-      <div style="margin-top:10px">
-        Установлено:
-        <b>${installed.length}</b>
       </div>
 
       <div style="margin-top:10px">
@@ -884,10 +523,6 @@ function renderProfile() {
 
   `;
 }
-
-/* -------------------------
-   NAVIGATION
-------------------------- */
 
 function renderCurrent() {
 
@@ -940,10 +575,6 @@ document
 
   });
 
-/* -------------------------
-   SERVICE WORKER
-------------------------- */
-
 if (
   "serviceWorker" in navigator
 ) {
@@ -954,14 +585,9 @@ if (
 
       navigator.serviceWorker
         .register("sW.js")
-        .then(() => {
-          console.log(
-            "RuStore Service Worker активирован"
-          );
-        })
         .catch(error => {
           console.error(
-            "Service Worker:",
+            "Service Worker error:",
             error
           );
         });
