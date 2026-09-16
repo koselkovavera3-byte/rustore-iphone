@@ -1,50 +1,111 @@
+/*
+ * RuStore / Veyra Store
+ * Marketplace Frontend V2
+ *
+ * ВАЖНО:
+ * Этот frontend НЕ скачивает чужие IPA напрямую.
+ * Для настоящей установки iOS нужен Apple-approved
+ * Alternative App Marketplace + MarketplaceKit.
+ *
+ * Сейчас приложение:
+ * - показывает каталог;
+ * - определяет iPhone / Android;
+ * - показывает правильный сценарий;
+ * - готово принимать данные от backend API;
+ * - не просит Apple ID / пароль;
+ * - не делает вид, что PWA = native IPA.
+ */
+
+const CONFIG = {
+  apiBase: "",
+  catalogEndpoint: "/api/apps",
+  marketplaceName: "RuStore",
+  version: "2.0.0"
+};
+
+/* --------------------------------------------------
+   КАТАЛОГ
+-------------------------------------------------- */
+
 const apps = [
   {
-    id: 1,
-    name: "RuStore",
-    dev: "RuStore",
-    rating: 4.7,
-    category: "Магазины",
-    desc: "Каталог приложений для российских пользователей.",
-    icon: "icon.svg",
-    url: "https://www.rustore.ru/"
-  },
-  {
-    id: 2,
+    id: "vk",
     name: "ВКонтакте",
-    dev: "VK",
+    developer: "VK",
     rating: 4.6,
     category: "Социальные",
-    desc: "Общение, музыка, видео и сообщества.",
+    description:
+      "Общение, музыка, видео и сообщества.",
     icon: "icon.svg",
-    url: "https://m.vk.ru/feed"
+
+    /*
+     * Пока false.
+     * После получения официального distribution
+     * package через Apple backend станет true.
+     */
+    nativeIOSAvailable: false,
+
+    webUrl: "https://m.vk.ru/feed"
   },
+
   {
-    id: 3,
+    id: "gosuslugi",
     name: "Госуслуги",
-    dev: "Минцифры России",
+    developer: "Минцифры России",
     rating: 4.8,
     category: "Государство",
-    desc: "Государственные услуги в одном приложении.",
+    description:
+      "Государственные услуги в одном приложении.",
     icon: "icon.svg",
-    url: "https://www.gosuslugi.ru/"
+
+    nativeIOSAvailable: false,
+
+    webUrl: "https://www.gosuslugi.ru/"
   },
+
   {
-    id: 4,
+    id: "sber",
     name: "СберБанк",
-    dev: "Сбер",
+    developer: "Сбер",
     rating: 4.9,
     category: "Финансы",
-    desc: "Банковские сервисы и платежи.",
+    description:
+      "Банковские сервисы и платежи.",
     icon: "icon.svg",
-    url: "https://www.sberbank.ru/"
+
+    nativeIOSAvailable: false,
+
+    webUrl: "https://www.sberbank.ru/"
+  },
+
+  {
+    id: "rustore",
+    name: "RuStore",
+    developer: "RuStore",
+    rating: 4.7,
+    category: "Магазины",
+    description:
+      "Каталог приложений для российских пользователей.",
+    icon: "icon.svg",
+
+    nativeIOSAvailable: false,
+
+    webUrl: "https://www.rustore.ru/"
   }
 ];
+
+/* --------------------------------------------------
+   СОСТОЯНИЕ
+-------------------------------------------------- */
 
 let favorites = load("favorites", []);
 let history = load("history", []);
 
-const app = document.getElementById("app");
+const appRoot = document.getElementById("app");
+
+/* --------------------------------------------------
+   STORAGE
+-------------------------------------------------- */
 
 function load(key, fallback) {
   try {
@@ -70,15 +131,9 @@ function save() {
   );
 }
 
-function getApp(id) {
-  return apps.find(
-    item => item.id === id
-  );
-}
-
-function isFavorite(id) {
-  return favorites.includes(id);
-}
+/* --------------------------------------------------
+   DEVICE
+-------------------------------------------------- */
 
 function isIOS() {
   return /iPhone|iPad|iPod/i.test(
@@ -89,6 +144,15 @@ function isIOS() {
 function isAndroid() {
   return /Android/i.test(
     navigator.userAgent
+  );
+}
+
+function isSafari() {
+  return (
+    /Safari/i.test(navigator.userAgent) &&
+    !/CriOS|FxiOS|EdgiOS|OPiOS/i.test(
+      navigator.userAgent
+    )
   );
 }
 
@@ -104,20 +168,41 @@ function isStandalone() {
   );
 }
 
+/* --------------------------------------------------
+   APP HELPERS
+-------------------------------------------------- */
+
+function getApp(id) {
+  return apps.find(
+    item => item.id === id
+  );
+}
+
+function isFavorite(id) {
+  return favorites.includes(id);
+}
+
 function toggleFavorite(id) {
+
   if (isFavorite(id)) {
-    favorites = favorites.filter(
-      item => item !== id
-    );
+
+    favorites =
+      favorites.filter(
+        item => item !== id
+      );
+
   } else {
+
     favorites.push(id);
   }
 
   save();
+
   renderCurrent();
 }
 
 function addHistory(id) {
+
   history = [
     id,
     ...history.filter(
@@ -128,7 +213,12 @@ function addHistory(id) {
   save();
 }
 
+/* --------------------------------------------------
+   CARD
+-------------------------------------------------- */
+
 function renderCard(item) {
+
   return `
     <div class="card">
 
@@ -137,17 +227,17 @@ function renderCard(item) {
         <img
           class="icon"
           src="${item.icon}"
-          alt="${item.name}"
+          alt="${escapeHTML(item.name)}"
         >
 
         <div style="flex:1">
 
           <div class="name">
-            ${item.name}
+            ${escapeHTML(item.name)}
           </div>
 
           <div class="muted">
-            ${item.dev}
+            ${escapeHTML(item.developer)}
           </div>
 
           <div class="rating">
@@ -159,7 +249,7 @@ function renderCard(item) {
         <button
           class="heart"
           type="button"
-          onclick="toggleFavorite(${item.id})"
+          onclick="toggleFavorite('${item.id}')"
         >
           ${
             isFavorite(item.id)
@@ -171,24 +261,24 @@ function renderCard(item) {
       </div>
 
       <div class="desc">
-        ${item.desc}
+        ${escapeHTML(item.description)}
       </div>
 
       <div
         class="muted"
         style="margin-top:8px"
       >
-        ${item.category}
+        ${escapeHTML(item.category)}
       </div>
 
       <button
         class="primary"
-        type="button"
         style="
           width:100%;
           margin-top:14px;
         "
-        onclick="openApp(${item.id})"
+        type="button"
+        onclick="openApp('${item.id}')"
       >
         Открыть
       </button>
@@ -197,8 +287,14 @@ function renderCard(item) {
   `;
 }
 
+/* --------------------------------------------------
+   HOME
+-------------------------------------------------- */
+
 function renderHome() {
-  app.innerHTML = `
+
+  appRoot.innerHTML = `
+
     <input
       id="search"
       class="search"
@@ -210,7 +306,9 @@ function renderHome() {
       Приложения
     </h1>
 
-    <div id="appList"></div>
+    <div
+      id="appList"
+    ></div>
   `;
 
   const search =
@@ -220,21 +318,26 @@ function renderHome() {
     document.getElementById("appList");
 
   function update() {
+
     const query =
       search.value
         .trim()
         .toLowerCase();
 
-    const filtered = apps.filter(item =>
-      (
-        item.name +
-        item.dev +
-        item.desc +
-        item.category
-      )
-        .toLowerCase()
-        .includes(query)
-    );
+    const filtered =
+      apps.filter(item => {
+
+        const text = [
+          item.name,
+          item.developer,
+          item.description,
+          item.category
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return text.includes(query);
+      });
 
     list.innerHTML =
       filtered.length
@@ -256,14 +359,20 @@ function renderHome() {
   update();
 }
 
+/* --------------------------------------------------
+   APP PAGE
+-------------------------------------------------- */
+
 function openApp(id) {
+
   const item = getApp(id);
 
   if (!item) return;
 
   addHistory(id);
 
-  app.innerHTML = `
+  appRoot.innerHTML = `
+
     <button
       class="back"
       type="button"
@@ -279,17 +388,17 @@ function openApp(id) {
         <img
           class="icon"
           src="${item.icon}"
-          alt="${item.name}"
+          alt="${escapeHTML(item.name)}"
         >
 
         <div style="flex:1">
 
           <div class="name">
-            ${item.name}
+            ${escapeHTML(item.name)}
           </div>
 
           <div class="muted">
-            ${item.dev}
+            ${escapeHTML(item.developer)}
           </div>
 
           <div class="rating">
@@ -302,8 +411,8 @@ function openApp(id) {
           class="heart"
           type="button"
           onclick="
-            toggleFavorite(${item.id});
-            openApp(${item.id});
+            toggleFavorite('${item.id}');
+            openApp('${item.id}');
           "
         >
           ${
@@ -319,21 +428,18 @@ function openApp(id) {
         class="desc"
         style="margin-top:15px"
       >
-        ${item.desc}
+        ${escapeHTML(item.description)}
       </div>
 
       <div
         class="muted"
         style="margin-top:12px"
       >
-        Категория: ${item.category}
+        Категория:
+        ${escapeHTML(item.category)}
       </div>
 
-      ${
-        item.id === 2
-          ? renderVKActions()
-          : renderStandardActions(item)
-      }
+      ${renderInstallArea(item)}
 
     </div>
 
@@ -344,14 +450,14 @@ function openApp(id) {
     <div class="card">
 
       <div class="desc">
-        ${item.desc}
+        ${escapeHTML(item.description)}
       </div>
 
       <div
         class="desc"
         style="margin-top:10px"
       >
-        Версия 1.0.0
+        Версия: ожидается из каталога
       </div>
 
       <div
@@ -388,71 +494,54 @@ function openApp(id) {
   `;
 }
 
-function renderStandardActions(item) {
-  return `
-    <button
-      class="primary"
-      type="button"
-      style="
-        width:100%;
-        height:50px;
-        margin-top:20px;
-      "
-      onclick="openExternal('${item.url}')"
-    >
-      Открыть официальный сайт
-    </button>
-  `;
-}
+/* --------------------------------------------------
+   INSTALL AREA
+-------------------------------------------------- */
 
-function renderVKActions() {
+function renderInstallArea(item) {
 
-  if (isStandalone()) {
-    return `
-      <div
-        class="install-box"
-        style="margin-top:20px"
-      >
-
-        <div
-          style="
-            text-align:center;
-            font-size:42px;
-          "
-        >
-          ✓
-        </div>
-
-        <h3 style="text-align:center">
-          RuStore добавлен на экран Домой
-        </h3>
-
-        <p
-          class="muted"
-          style="text-align:center"
-        >
-          VK можно открыть через
-          мобильную версию.
-        </p>
-
-        <button
-          class="primary"
-          type="button"
-          style="
-            width:100%;
-            height:50px;
-            margin-top:10px;
-          "
-          onclick="openVK()"
-        >
-          Открыть VK
-        </button>
-
-      </div>
-    `;
-  }
+  /*
+   * НАСТОЯЩАЯ iOS УСТАНОВКА
+   *
+   * Здесь в будущем появится MarketplaceKit URI,
+   * сформированный backend + Apple verification token.
+   */
 
   if (isIOS()) {
+
+    if (item.nativeIOSAvailable) {
+
+      return `
+        <div
+          class="install-box"
+          style="margin-top:20px"
+        >
+
+          <h3>
+            Установка приложения
+          </h3>
+
+          <p class="desc">
+            Доступна официальная версия
+            для альтернативной дистрибуции.
+          </p>
+
+          <button
+            class="primary"
+            style="
+              width:100%;
+              height:52px;
+            "
+            type="button"
+            onclick="installNative('${item.id}')"
+          >
+             Установить приложение
+          </button>
+
+        </div>
+      `;
+    }
+
     return `
       <div
         class="install-box"
@@ -460,46 +549,57 @@ function renderVKActions() {
       >
 
         <h3>
-          VK на iPhone
+          Приложение для iPhone
         </h3>
 
+        <p class="desc">
+          Нативная установка пока
+          не подключена к Apple Marketplace.
+        </p>
+
         <p class="muted">
-          Настоящее приложение VK нельзя
-          установить непосредственно
-          с обычной веб-страницы.
+          Сейчас можно открыть
+          официальный мобильный сервис.
         </p>
 
         <button
           class="primary"
-          type="button"
           style="
             width:100%;
-            height:52px;
-            margin-top:12px;
-          "
-          onclick="showIOSInstall()"
-        >
-          📱 Установить на iPhone
-        </button>
-
-        <button
-          class="secondary"
-          type="button"
-          style="
-            width:100%;
-            height:48px;
+            height:50px;
             margin-top:10px;
           "
-          onclick="openVK()"
+          type="button"
+          onclick="openWebVersion('${item.id}')"
         >
-          🌐 Открыть VK
+          Открыть мобильную версию
         </button>
+
+        ${
+          item.id === "vk"
+            ? `
+              <button
+                class="secondary"
+                style="
+                  width:100%;
+                  height:48px;
+                  margin-top:10px;
+                "
+                type="button"
+                onclick="showIOSInstructions('${item.id}')"
+              >
+                Установить веб-версию на экран Домой
+              </button>
+            `
+            : ""
+        }
 
       </div>
     `;
   }
 
   if (isAndroid()) {
+
     return `
       <div
         class="install-box"
@@ -507,26 +607,25 @@ function renderVKActions() {
       >
 
         <h3>
-          VK на Android
+          Android
         </h3>
 
-        <p class="muted">
-          Откройте официальный сайт VK
-          или используйте официальный
-          магазин приложений вашего устройства.
+        <p class="desc">
+          Способ установки зависит
+          от официального канала
+          распространения приложения.
         </p>
 
         <button
           class="primary"
-          type="button"
           style="
             width:100%;
-            height:52px;
-            margin-top:12px;
+            height:50px;
           "
-          onclick="openVK()"
+          type="button"
+          onclick="openWebVersion('${item.id}')"
         >
-          📱 Открыть VK
+          Открыть официальный источник
         </button>
 
       </div>
@@ -534,34 +633,139 @@ function renderVKActions() {
   }
 
   return `
-    <button
-      class="primary"
-      type="button"
-      style="
-        width:100%;
-        height:50px;
-        margin-top:20px;
-      "
-      onclick="openVK()"
+    <div
+      class="install-box"
+      style="margin-top:20px"
     >
-      Открыть VK
-    </button>
+
+      <h3>
+        Официальный источник
+      </h3>
+
+      <button
+        class="primary"
+        style="
+          width:100%;
+          height:50px;
+        "
+        type="button"
+        onclick="openWebVersion('${item.id}')"
+      >
+        Открыть
+      </button>
+
+    </div>
   `;
 }
 
-function showIOSInstall() {
+/* --------------------------------------------------
+   FUTURE NATIVE INSTALL
+-------------------------------------------------- */
 
-  app.innerHTML = `
+async function installNative(id) {
+
+  const item = getApp(id);
+
+  if (!item) return;
+
+  /*
+   * Здесь НЕ должно быть:
+   *
+   * window.location.href = ".ipa"
+   *
+   * и НЕ должно быть:
+   *
+   * Apple ID
+   * Apple password
+   *
+   * В production здесь будет запрос backend,
+   * который вернёт корректный MarketplaceKit
+   * installation URL + verification token.
+   */
+
+  try {
+
+    const response =
+      await fetch(
+        `${CONFIG.apiBase}/api/install/${encodeURIComponent(id)}`,
+        {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        `Install API ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    if (
+      !data ||
+      !data.installUrl
+    ) {
+      throw new Error(
+        "Install URL отсутствует"
+      );
+    }
+
+    window.location.href =
+      data.installUrl;
+
+  } catch (error) {
+
+    console.error(
+      "Native installation:",
+      error
+    );
+
+    showMessage(
+      "Нативная установка пока не подключена. Сначала подключим Apple Marketplace и backend."
+    );
+  }
+}
+
+/* --------------------------------------------------
+   WEB VERSION
+-------------------------------------------------- */
+
+function openWebVersion(id) {
+
+  const item = getApp(id);
+
+  if (!item) return;
+
+  window.location.href =
+    item.webUrl;
+}
+
+/* --------------------------------------------------
+   iOS INSTRUCTIONS
+-------------------------------------------------- */
+
+function showIOSInstructions(id) {
+
+  const item = getApp(id);
+
+  if (!item) return;
+
+  appRoot.innerHTML = `
+
     <button
       class="back"
       type="button"
-      onclick="openApp(2)"
+      onclick="openApp('${item.id}')"
     >
       ‹ Назад
     </button>
 
     <h1>
-      VK на iPhone
+      Установка веб-версии
     </h1>
 
     <div class="card">
@@ -571,19 +775,18 @@ function showIOSInstall() {
       </div>
 
       <h2>
-        Установка
+        ${escapeHTML(item.name)}
       </h2>
 
       <p class="desc">
-        iPhone не позволяет веб-сайту
-        самостоятельно установить
-        настоящее приложение VK в формате
-        .ipa.
+        Это не настоящее IPA-приложение.
+        Мы не выдаём веб-версию за нативное
+        приложение.
       </p>
 
       <p class="desc">
-        Поэтому здесь используется
-        официальная мобильная веб-версия VK.
+        На iPhone её можно добавить
+        на экран «Домой».
       </p>
 
     </div>
@@ -595,20 +798,20 @@ function showIOSInstall() {
       </h3>
 
       <p class="desc">
-        Открой мобильную версию VK.
+        Открой мобильную версию
+        в Safari.
       </p>
 
       <button
         class="primary"
-        type="button"
         style="
           width:100%;
           height:50px;
-          margin-top:10px;
         "
-        onclick="openVK()"
+        type="button"
+        onclick="openWebVersion('${item.id}')"
       >
-        Открыть VK
+        Открыть ${escapeHTML(item.name)}
       </button>
 
     </div>
@@ -620,19 +823,12 @@ function showIOSInstall() {
       </h3>
 
       <p class="desc">
-        Если VK открыт в Safari,
-        нажми кнопку
+        В Safari нажми
         <b>«Поделиться»</b>.
       </p>
 
-      <div
-        style="
-          font-size:40px;
-          text-align:center;
-          margin:15px 0;
-        "
-      >
-        ↑
+      <div class="big-icon">
+        ⬆️
       </div>
 
     </div>
@@ -663,95 +859,12 @@ function showIOSInstall() {
 
     </div>
 
-    <div class="install-step">
-
-      <h3>
-        Если пункта «На экран Домой» нет
-      </h3>
-
-      <p class="desc">
-        Открой приложение
-        <b>Safari</b> отдельно,
-        перейди на:
-      </p>
-
-      <button
-        class="secondary"
-        type="button"
-        style="
-          width:100%;
-          margin-top:10px;
-        "
-        onclick="copyVKUrl()"
-      >
-        Скопировать адрес VK
-      </button>
-
-      <p
-        id="copyStatus"
-        class="muted"
-        style="
-          text-align:center;
-          margin-top:10px;
-        "
-      ></p>
-
-    </div>
-
-    <button
-      class="secondary"
-      type="button"
-      style="
-        width:100%;
-        height:48px;
-        margin-top:12px;
-      "
-      onclick="openApp(2)"
-    >
-      Вернуться к VK
-    </button>
   `;
 }
 
-function openVK() {
-  window.location.href =
-    "https://m.vk.ru/feed";
-}
-
-function openExternal(url) {
-  window.location.href = url;
-}
-
-async function copyVKUrl() {
-
-  const url =
-    "https://m.vk.ru/feed";
-
-  const status =
-    document.getElementById(
-      "copyStatus"
-    );
-
-  try {
-
-    await navigator.clipboard.writeText(
-      url
-    );
-
-    if (status) {
-      status.textContent =
-        "Адрес скопирован. Открой Safari и вставь его в адресную строку.";
-    }
-
-  } catch {
-
-    if (status) {
-      status.textContent =
-        url;
-    }
-
-  }
-}
+/* --------------------------------------------------
+   FAVORITES
+-------------------------------------------------- */
 
 function renderFavorites() {
 
@@ -760,7 +873,8 @@ function renderFavorites() {
       item => isFavorite(item.id)
     );
 
-  app.innerHTML = `
+  appRoot.innerHTML = `
+
     <h1>
       Избранное
     </h1>
@@ -772,15 +886,23 @@ function renderFavorites() {
             .join("")
         : `
           <div class="empty">
+
             Нет избранных приложений.
+
             <br><br>
+
             Добавляй приложения
             кнопкой ♡
+
           </div>
         `
     }
   `;
 }
+
+/* --------------------------------------------------
+   PROFILE
+-------------------------------------------------- */
 
 function renderProfile() {
 
@@ -789,7 +911,8 @@ function renderProfile() {
       .map(id => getApp(id))
       .filter(Boolean);
 
-  app.innerHTML = `
+  appRoot.innerHTML = `
+
     <h1>
       Профиль
     </h1>
@@ -860,11 +983,11 @@ function renderProfile() {
 
     <button
       class="secondary"
-      type="button"
       style="
         width:100%;
         margin-top:10px;
       "
+      type="button"
       onclick="
         history=[];
         save();
@@ -875,6 +998,10 @@ function renderProfile() {
     </button>
   `;
 }
+
+/* --------------------------------------------------
+   NAVIGATION
+-------------------------------------------------- */
 
 function renderCurrent() {
 
@@ -927,9 +1054,59 @@ document
 
   });
 
-if (
-  "serviceWorker" in navigator
-) {
+/* --------------------------------------------------
+   MESSAGE
+-------------------------------------------------- */
+
+function showMessage(text) {
+
+  appRoot.innerHTML = `
+
+    <div class="card">
+
+      <h2>
+        Информация
+      </h2>
+
+      <p class="desc">
+        ${escapeHTML(text)}
+      </p>
+
+      <button
+        class="secondary"
+        style="
+          width:100%;
+          height:48px;
+        "
+        type="button"
+        onclick="renderCurrent()"
+      >
+        Назад
+      </button>
+
+    </div>
+  `;
+}
+
+/* --------------------------------------------------
+   SECURITY
+-------------------------------------------------- */
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+/* --------------------------------------------------
+   SERVICE WORKER
+-------------------------------------------------- */
+
+if ("serviceWorker" in navigator) {
 
   window.addEventListener(
     "load",
@@ -950,7 +1127,7 @@ if (
       } catch (error) {
 
         console.error(
-          "Service Worker error:",
+          "Service Worker:",
           error
         );
 
@@ -959,5 +1136,9 @@ if (
     }
   );
 }
+
+/* --------------------------------------------------
+   START
+-------------------------------------------------- */
 
 renderHome();
